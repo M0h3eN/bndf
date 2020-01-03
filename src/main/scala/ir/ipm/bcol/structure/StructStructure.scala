@@ -54,9 +54,6 @@ class StructStructure extends CellStructure {
           case "us.hebi.matlab.mat.format.MatCell" => parseCellToMap(structMat.getCell(fn), fn).getOrElse(Map(parentName -> ""))
           case "us.hebi.matlab.mat.format.MatMatrix" => parseMatrixToMap(structMat.getMatrix(fn), fn).getOrElse(Map(parentName -> ""))
           case "us.hebi.matlab.mat.format.MatChar" => parseCharArrayToMap(structMat, fn, structRowNum)
-
-
-
           case _ => throw new Exception(s"Unrecognized type class: $cl")
 
         }
@@ -71,6 +68,43 @@ class StructStructure extends CellStructure {
 
       sortedStructMap
 
+    }
+
+  }
+
+  def parseStructToDataStructure(structMat: Struct, parentName: String): Option[Array[DataStructure]] ={
+
+    val fieldNames = structMat.getFieldNames.asScala.toArray
+    val structDimension = structMat.getDimensions.sum
+
+
+    if (structDimension <= 2) {
+
+      val fiealdClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
+      val fiealdInfo = fieldNames.zip(fiealdClassNames).toMap
+
+      val structFieldsMapIterator = fiealdInfo map { case (fn, cl) =>
+
+        if (cl.equals("us.hebi.matlab.mat.format.MatMatrix")){
+          val result = parseMatrixToDataStructure(structMat.getMatrix(fn), fn)
+          if (result.isDefined) Some(result.get) else None
+        } else if (cl.equals("us.hebi.matlab.mat.format.MatCell")){
+          val result = parseCellToDataStructure(structMat.getCell(fn), fn)
+          if (result.isDefined) Some(result.get) else None
+        } else if (cl.equals("us.hebi.matlab.mat.format.MatStruct")){
+          val result = parseStructToDataStructure(structMat.getStruct(fn), fn)
+          if (result.isDefined) Some(result.get) else None
+        } else {
+          None
+        }
+      }
+
+      val structData = structFieldsMapIterator.toArray.flatten
+      if(structData.length != 0) Some(structData.apply(0)) else None
+
+
+    } else {
+      None
     }
 
   }
