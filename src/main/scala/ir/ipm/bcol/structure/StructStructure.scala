@@ -100,13 +100,47 @@ class StructStructure extends CellStructure {
       }
 
       val structData = structFieldsMapIterator.toArray.flatten
-      if(structData.length != 0) Some(structData.apply(0)) else None
-
+      if(structData.length != 0) Some(structData.flatten) else None
 
     } else {
       None
     }
 
+  }
+
+  def parseStructToEventStructure(structMat: Struct, parentName: String): Option[Array[EventStructure]] ={
+
+    val fieldNames = structMat.getFieldNames.asScala.toArray
+    val structDimension = structMat.getDimensions.sum
+
+
+    if (structDimension <= 2) {
+
+      val fiealdClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
+      val fiealdInfo = fieldNames.zip(fiealdClassNames).toMap
+
+      val structFieldsMapIterator = fiealdInfo map { case (fn, cl) =>
+
+        if (cl.equals("us.hebi.matlab.mat.format.MatMatrix")){
+          val result = parseMatrixToEventStructure(structMat.getMatrix(fn), fn)
+          if (result.isDefined) Some(result.get) else None
+        } else if (cl.equals("us.hebi.matlab.mat.format.MatCell")){
+          val result = parseCellToEventStructure(structMat.getCell(fn), fn)
+          if (result.isDefined) Some(result.get) else None
+        } else if (cl.equals("us.hebi.matlab.mat.format.MatStruct")){
+          val result = parseStructToEventStructure(structMat.getStruct(fn), fn)
+          if (result.isDefined) Some(result.get) else None
+        } else {
+          None
+        }
+      }
+
+      val structData = structFieldsMapIterator.toArray.flatten
+      if(structData.length != 0) Some(structData.flatten) else None
+
+    } else {
+      None
+    }
   }
 
 }
