@@ -63,4 +63,34 @@ trait MatrixStructure extends CharStructure {
 
   }
 
+  def parseMatrixToEventStructure(matrixField: Matrix, parentName: String): Option[Array[EventStructure]] ={
+
+    val childDimension = matrixField.getDimensions.sum
+    val childColumn = matrixField.getNumCols
+    val childRow = matrixField.getNumRows
+
+    if (matrixField.getNumElements != 0){
+    if (childColumn.equals(1) && childDimension > 2 && childRow > 100 && parentName.equals("Data")){
+
+    logger.info(s"$parentName --> Signal data found, writing: $matrixField")
+
+    val rawData = (0 until childRow).map(row => Seq(matrixField.getLong(row), row)).toArray
+    val rawDataFlat = (0 until childRow).map(row => matrixField.getLong(row)).toArray
+
+      if (rawDataFlat sameElements rawDataFlat.sorted){
+        Some(rawData.map(elem => EventStructure(elem.head, "time", elem.apply(1))))
+      } else {
+        Some(rawData.map(elem => EventStructure(elem.head, "code", elem.apply(1))))
+      }
+
+  } else {
+    None
+  }
+
+  } else {
+    None
+  }
+
+  }
+
 }
