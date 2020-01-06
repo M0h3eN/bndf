@@ -66,4 +66,32 @@ class CellStructure extends CharArrayStructure with MatrixStructure {
 
   }
 
+  def parseCellToEventStructure(cellField: Cell, parentName: String): Option[Array[EventStructure]] ={
+
+    val childDimension = cellField.getDimensions.sum
+
+    if (cellField.getNumElements != 0) {
+      if (childDimension <= 2) {
+
+        val cellElemClassNames = cellField.get(0).getClass.toString.split(" ").apply(1)
+
+        if (cellElemClassNames.equals("us.hebi.matlab.mat.format.MatMatrix")){
+
+          val result = parseMatrixToEventStructure(cellField.getMatrix(0), parentName)
+          if (result.isDefined) Some(result.get) else None
+
+        } else {
+          None
+        }
+      } else {
+        logger.warn(s"$parentName --> cell is not flat, skipping $cellField")
+        None
+      }
+    } else {
+      logger.warn(s"$parentName --> $cellField is empty, skipping...")
+      None
+    }
+
+  }
+
 }
