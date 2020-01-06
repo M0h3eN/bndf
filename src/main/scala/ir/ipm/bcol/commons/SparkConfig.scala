@@ -1,5 +1,6 @@
 package ir.ipm.bcol.commons
 
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
@@ -25,6 +26,9 @@ class SparkConfig {
   }
 
   def sparkSessionCreator(conf: SparkConf) :SparkSession = {
+
+    Logger.getLogger("org").setLevel(Level.WARN)
+    Logger.getLogger("akka").setLevel(Level.WARN)
 
     SparkSession
       .builder
