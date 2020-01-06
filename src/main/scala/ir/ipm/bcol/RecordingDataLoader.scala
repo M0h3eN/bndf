@@ -1,13 +1,13 @@
 package ir.ipm.bcol
 
+import com.typesafe.scalalogging.Logger
+
 import scala.collection.JavaConverters._
 import spray.json._
 import ir.ipm.bcol.commons.M2eeJsonProtocol.MapJsonFormat
-import ir.ipm.bcol.commons.SparkConfig
+import ir.ipm.bcol.commons.{FileSystem, MongoConnector, SparkConfig}
 import us.hebi.matlab.mat.format.Mat5.readFromFile
 import ir.ipm.bcol.structure.SchemaCreator
-import ir.ipm.bcol.commons.MongoConnector
-
 import org.apache.spark.sql.SaveMode
 import org.apache.spark.sql.functions.lit
 
@@ -16,45 +16,82 @@ import org.apache.spark.sql.functions.lit
  */
 object RecordingDataLoader {
 
+  val logger: Logger = Logger(s"${this.getClass.getName}")
+
   val MONGO_DB_NAME = "MetaDataDB"
   val MONGO_URI = "mongodb://root:ns123@mongos0:27017/admin"
 
   val sparkConfig = new SparkConfig
   val mongoConnector = new MongoConnector
+  val fileSystem = new FileSystem
 
   def main(args : Array[String]) {
 
     val conf = sparkConfig.sparkInitialConf("Recording Data Loader", MONGO_URI, MONGO_DB_NAME)
     val spark = sparkConfig.sparkSessionCreator(conf)
-    val schemaObject = new SchemaCreator
+    val schemaCreator = new SchemaCreator
 
     import spark.implicits._
+    if(args.isEmpty) logger.error("Path Must specified", throw new Exception("Path Must specified"))
 
-    val filePath = "/data/raw-data/Experiment_Kopo_2018-04-25_J9_8600/"
-    val experiment = "Experiment_Kopo_2018-04-25_J9_8600"
-    val hdfsWritePath = "/" + experiment + "/"
-    val fileName = "channelik0_1.mat"
+    val RawFileFormat = "mat"
+    val fullPath = fileSystem.getListOfFiles(args.apply(0), RawFileFormat)
 
-    val matTestFile = readFromFile(filePath + fileName)
-    val entries = matTestFile.getEntries.asScala
+    val pathLen = fullPath.map(x => x.split("/")).head.length
+    val parrentPath = fullPath.map(x => x.split("/").apply(pathLen-3)).head
+    val experimentName = fullPath.map(x => x.split("/").apply(pathLen-2)).head
+    val channelFileNames = fullPath.map(x => x.split("/").apply(pathLen-1).split("\\.").apply(0))
+      .filter(c => c.startsWith("channel")).sorted
+    val eventFileNames = fullPath.map(x => x.split("/").apply(pathLen-1).split("\\.").apply(0))
+      .filter(c => c.startsWith("event")).sorted
 
-    val metaData = schemaObject.metaDataSchemaCreator(entries, matTestFile)
-    val rawData = schemaObject.dataSchemaCreator(entries, matTestFile)
+    if(eventFileNames.isEmpty) logger.error("Event file not found", throw new Exception("Event file not found"))
 
-    val metaDataJson = Seq(metaData.toJson.toString())
-    val metaDataJsonDataSet = spark.createDataset(metaDataJson)
-    val metaDataDf = spark.read.json(metaDataJsonDataSet).withColumn("_id", lit(fileName.split("\\.").apply(0)))
-    val dataDF = rawData.toSeq.toDF()
+    val eventFullPath = fullPath.filter(x => eventFileNames.map(y => x.contains(y)).reduce(_ || _)).sorted
+    val channelFullPath = fullPath.filter(x => channelFileNames.map(y => x.contains(y)).reduce(_ || _)).sorted
 
+    eventFullPath.foreach(println)
 
-    mongoConnector.Writer(spark, metaDataDf, MONGO_URI, MONGO_DB_NAME, experiment)
+    val eventDataSet = eventFullPath.map(ev => {
 
-    dataDF
-      .write
-      .mode(SaveMode.Overwrite)
-      .parquet(hdfsWritePath + fileName.split("\\.").apply(0) + ".parquet")
+      val eventMatFile = readFromFile(ev)
+      val eventEntry = eventMatFile.getEntries.asScala
+      val eventFileName = ev.split("/").apply(pathLen-1).split("\\.").apply(0)
 
-    println(dataDF.count())
+      logger.info(s"Start Writing Event MetaData for $eventFileName")
+
+      val eventFileHdfsWritePath = s"/$parrentPath/$experimentName/$eventFileName.parquet"
+      val eventMetaData = schemaCreator.metaDataSchemaCreator(eventEntry, eventMatFile)
+      val eventMetaDatJson = spark.createDataset(Seq(eventMetaData.toJson.toString()))
+      val eventMetaDatJsonDs = spark.read.json(eventMetaDatJson).withColumn("_id", lit(eventFileName))
+
+      mongoConnector.Writer(spark, eventMetaDatJsonDs, MONGO_URI, MONGO_DB_NAME, experimentName)
+      logger.info(s"Start Writing Event Data for $eventFileName")
+
+      val eventData = schemaCreator.eventDataSchemaCreator(eventEntry, eventMatFile)
+      val eventDs = eventData.toSeq.toDS()
+
+      val eventTimeDs = eventDs.filter($"Type" === "time").select("EventValue", "Id")
+      val eventCondDs = eventDs.filter($"Type" === "code").select("EventValue", "Id")
+
+      val eventCompleteDs = eventTimeDs.as("df1")
+          .join(eventCondDs.as("df2"), Seq("Id"))
+          .select($"df1.EventValue".as("EventTime"), $"df2.EventValue".as("EventCode"))
+
+      eventCompleteDs
+        .write
+        .mode(SaveMode.Overwrite)
+        .parquet(eventFileHdfsWritePath)
+
+      eventCompleteDs
+
+    }).reduce((ds1, ds2) => ds1.union(ds2))
+
+    val eventHeadStart = eventDataSet.select($"EventTime").first().getAs[Long](0)
+    val FilteredEventDataSet = eventDataSet
+      .withColumn("EventTime", $"EventTime" + eventHeadStart)
+      .filter($"EventTime" > 0)
+
 
 
   }
