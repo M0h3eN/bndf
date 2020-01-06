@@ -20,7 +20,9 @@ trait MatrixStructure extends CharStructure {
         if (childColumn.equals(1) && childRow < 100){
 
           val leafValue = (0 until childRow).map(r => matrixField.getDouble(r)).toArray
-            .map(x => x.toString.concat(", ")).foldLeft("[")((x, y) => x + y).foldRight("]")((x, y) => x + y)
+            .map(x => x.toString.concat(", "))
+            .foldLeft("[")((x, y) => x + y)
+            .foldRight("]")((x, y) => x + y)
             .replace(", ]", "]")
 
           Some(Map(parentName -> leafValue.asInstanceOf[M]))
