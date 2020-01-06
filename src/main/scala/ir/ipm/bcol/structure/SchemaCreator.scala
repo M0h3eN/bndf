@@ -10,7 +10,7 @@ import scala.collection.immutable.ListMap
 class SchemaCreator {
 
   val logger: Logger = Logger(s"${this.getClass.getName}")
-  val structObj = new StructStructure
+  val structStructure = new StructStructure
 
   def metaDataSchemaCreator(entries: Iterable[Entry], matFile: Mat5File): Map[String, Any] = {
 
@@ -20,8 +20,8 @@ class SchemaCreator {
       val parentFieldsType = it.getValue.getType.toString
 
       val fieldsMap = parentFieldsType match {
-        case "char" => structObj.parseCharToMap(matFile.getChar(parentFieldsName), parentFieldsName).getOrElse(Map(parentFieldsName -> ""))
-        case "struct" => structObj.parseStructToMap(matFile.getStruct(parentFieldsName), parentFieldsName)
+        case "char" => structStructure.parseCharToMap(matFile.getChar(parentFieldsName), parentFieldsName).getOrElse(Map(parentFieldsName -> ""))
+        case "struct" => structStructure.parseStructToMap(matFile.getStruct(parentFieldsName), parentFieldsName)
         case _ => throw new Exception(s"Unrecognized type field: $it")
       }
 
@@ -42,7 +42,7 @@ class SchemaCreator {
       val parentFieldsType = it.getValue.getType.toString
 
       if(parentFieldsType.equals("struct")){
-        val result = structObj.parseStructToDataStructure(matFile.getStruct(parentFieldsName), parentFieldsName)
+        val result = structStructure.parseStructToDataStructure(matFile.getStruct(parentFieldsName), parentFieldsName)
         if(result.isDefined) Some(result.get) else None
       } else {
         None
