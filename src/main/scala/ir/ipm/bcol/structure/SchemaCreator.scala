@@ -34,7 +34,7 @@ class SchemaCreator {
     sortedStructMap
   }
 
-  def dataSchemaCreator(entries: Iterable[Entry], matFile: Mat5File): Array[DataStructure] = {
+  def rawDataSchemaCreator(entries: Iterable[Entry], matFile: Mat5File): Array[DataStructure] = {
 
     val nestedMetaDataMapIterator = entries.map(it => {
 
@@ -51,10 +51,34 @@ class SchemaCreator {
     })
 
     val rawData = nestedMetaDataMapIterator.toArray.flatten
-    if(rawData.length !=0) rawData.apply(0) else {
+    if(rawData.length !=0) rawData.flatten else {
       logger.warn("File does not have signal data")
       Array(DataStructure(0, -1))
     }
+  }
+
+  def eventDataSchemaCreator(entries: Iterable[Entry], matFile: Mat5File): Array[EventStructure] ={
+
+    val nestedMetaDataMapIterator = entries.map(it => {
+
+      val parentFieldsName = it.getName
+      val parentFieldsType = it.getValue.getType.toString
+
+      if(parentFieldsType.equals("struct")){
+        val result = structStructure.parseStructToEventStructure(matFile.getStruct(parentFieldsName), parentFieldsName)
+        if(result.isDefined) Some(result.get) else None
+      } else {
+        None
+      }
+
+    })
+
+    val rawData = nestedMetaDataMapIterator.toArray.flatten
+    if(rawData.length !=0) rawData.flatten else {
+      logger.warn("File does not have signal data")
+      Array(EventStructure(0, "NULL", -1))
+    }
+
   }
 
 }
