@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>ir.ipm.bcol</groupId>
   <artifactId>RecordingDataLoader</artifactId>
-  <version>0.0.2</version>
+  <version>0.0.9</version>
   <name>${project.artifactId}</name>
   <description>Recording Data Loader</description>
   <inceptionYear>2019</inceptionYear>
@@ -65,40 +65,12 @@
       <artifactId>mongo-spark-connector_2.11</artifactId>
       <version>${mongo-connector.version}</version>
     </dependency>
-
-    <!-- Test -->
-<!--    <dependency>-->
-<!--      <groupId>junit</groupId>-->
-<!--      <artifactId>junit</artifactId>-->
-<!--      <version>4.12</version>-->
-<!--      <scope>test</scope>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>org.scalatest</groupId>-->
-<!--      <artifactId>scalatest_${scala.compat.version}</artifactId>-->
-<!--      <version>3.0.5</version>-->
-<!--      <scope>test</scope>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>org.specs2</groupId>-->
-<!--      <artifactId>specs2-core_${scala.compat.version}</artifactId>-->
-<!--      <version>${spec2.version}</version>-->
-<!--      <scope>test</scope>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>org.specs2</groupId>-->
-<!--      <artifactId>specs2-junit_${scala.compat.version}</artifactId>-->
-<!--      <version>${spec2.version}</version>-->
-<!--      <scope>test</scope>-->
-<!--    </dependency>-->
   </dependencies>
 
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
-<!--    <testSourceDirectory>src/test/scala</testSourceDirectory>-->
     <plugins>
       <plugin>
-        <!-- see http://davidb.github.com/scala-maven-plugin -->
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
         <version>3.3.2</version>
@@ -122,7 +94,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.21.0</version>
         <configuration>
-          <!-- Tests will be run with scalatest-maven-plugin instead -->
           <skipTests>true</skipTests>
         </configuration>
       </plugin>
@@ -139,26 +110,6 @@
           </execution>
         </executions>
       </plugin>
-<!--      <plugin>-->
-<!--        <groupId>org.scalatest</groupId>-->
-<!--        <artifactId>scalatest-maven-plugin</artifactId>-->
-<!--        <version>2.0.0</version>-->
-<!--        <configuration>-->
-<!--          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>-->
-<!--          <junitxml>.</junitxml>-->
-<!--          <filereports>TestSuiteReport.txt</filereports>-->
-<!--          &lt;!&ndash; Comma separated list of JUnit test class names to execute &ndash;&gt;-->
-<!--          <jUnitClasses>samples.AppTest</jUnitClasses>-->
-<!--        </configuration>-->
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <id>test</id>-->
-<!--            <goals>-->
-<!--              <goal>test</goal>-->
-<!--            </goals>-->
-<!--          </execution>-->
-<!--        </executions>-->
-<!--      </plugin>-->
     </plugins>
   </build>
 </project>
