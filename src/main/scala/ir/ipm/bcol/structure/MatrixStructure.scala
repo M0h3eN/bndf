@@ -28,18 +28,16 @@ trait MatrixStructure extends CharStructure {
           Some(Map(parentName -> leafValue.asInstanceOf[M]))
 
         } else {
-          logger.warn(s"$parentName --> too many for meta data, skipping $matrixField")
           None
         }
       }
     } else {
-      logger.warn(s"$parentName --> $matrixField is empty, skipping...")
       None
     }
 
   }
 
-  def parseMatrixToDataStructure(matrixField: Matrix, parentName: String): Option[Array[DataStructure]] ={
+  def parseMatrixToDataStructure(matrixField: Matrix, timeIndex: Long,  parentName: String): Option[Array[DataStructure]] ={
 
     val childDimension = matrixField.getDimensions.sum
     val childColumn = matrixField.getNumCols
@@ -49,7 +47,7 @@ trait MatrixStructure extends CharStructure {
       if (childColumn.equals(1) && childDimension > 2 && childRow > 100){
 
         logger.info(s"$parentName --> Signal data found, writing: $matrixField")
-        val rawData = (0 until childRow).map(row => DataStructure(matrixField.getDouble(row), row + 1)).toArray
+        val rawData = (0 until childRow).map(row => DataStructure(matrixField.getDouble(row), row + timeIndex + 1)).toArray
         Some(rawData)
 
       } else {
