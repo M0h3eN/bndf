@@ -6,10 +6,11 @@ import org.apache.spark.sql.SparkSession
 
 class SparkConfig {
 
-  def sparkInitialConf(appName: String, mongoUrl: String, mongoDb: String) :SparkConf  = {
+  def sparkInitialConf(appName: String,  mongoUrl: String, mongoDb: String, sqlShufflePar: Int = 200) :SparkConf  = {
 
     new SparkConf()
       .setAppName(appName)
+      .set("spark.sql.shuffle.partitions", s"$sqlShufflePar")
       .set("spark.network.timeout", "7200")
       .set("spark.ui.showConsoleProgress", "false")
       .set("spark.sql.catalogImplementation", "hive")
