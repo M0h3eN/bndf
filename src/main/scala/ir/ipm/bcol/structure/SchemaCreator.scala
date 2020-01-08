@@ -34,7 +34,7 @@ class SchemaCreator {
     sortedStructMap
   }
 
-  def rawDataSchemaCreator(entries: Iterable[Entry], matFile: Mat5File): Array[DataStructure] = {
+  def rawDataSchemaCreator(entries: Iterable[Entry], timeIndex: Long,  matFile: Mat5File): Array[DataStructure] = {
 
     val nestedMetaDataMapIterator = entries.map(it => {
 
@@ -42,7 +42,7 @@ class SchemaCreator {
       val parentFieldsType = it.getValue.getType.toString
 
       if(parentFieldsType.equals("struct")){
-        val result = structStructure.parseStructToDataStructure(matFile.getStruct(parentFieldsName), parentFieldsName)
+        val result = structStructure.parseStructToDataStructure(matFile.getStruct(parentFieldsName), timeIndex, parentFieldsName)
         if(result.isDefined) Some(result.get) else None
       } else {
         None
