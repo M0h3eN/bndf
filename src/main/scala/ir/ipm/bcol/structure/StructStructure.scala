@@ -72,7 +72,7 @@ class StructStructure extends CellStructure {
 
   }
 
-  def parseStructToDataStructure(structMat: Struct, parentName: String): Option[Array[DataStructure]] ={
+  def parseStructToDataStructure(structMat: Struct, timeIndex: Long, parentName: String): Option[Array[DataStructure]] ={
 
     val fieldNames = structMat.getFieldNames.asScala.toArray
     val structDimension = structMat.getDimensions.sum
@@ -86,13 +86,13 @@ class StructStructure extends CellStructure {
       val structFieldsMapIterator = fiealdInfo map { case (fn, cl) =>
 
         if (cl.equals("us.hebi.matlab.mat.format.MatMatrix")){
-          val result = parseMatrixToDataStructure(structMat.getMatrix(fn), fn)
+          val result = parseMatrixToDataStructure(structMat.getMatrix(fn), timeIndex, fn)
           if (result.isDefined) Some(result.get) else None
         } else if (cl.equals("us.hebi.matlab.mat.format.MatCell")){
-          val result = parseCellToDataStructure(structMat.getCell(fn), fn)
+          val result = parseCellToDataStructure(structMat.getCell(fn), timeIndex, fn)
           if (result.isDefined) Some(result.get) else None
         } else if (cl.equals("us.hebi.matlab.mat.format.MatStruct")){
-          val result = parseStructToDataStructure(structMat.getStruct(fn), fn)
+          val result = parseStructToDataStructure(structMat.getStruct(fn), timeIndex, fn)
           if (result.isDefined) Some(result.get) else None
         } else {
           None
