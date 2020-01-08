@@ -28,17 +28,15 @@ class CellStructure extends CharArrayStructure with MatrixStructure {
         Some(sorteLeafValue)
 
       } else {
-        logger.warn(s"$parentName --> cell is not flat, skipping $cellField")
         None
       }
     } else {
-      logger.warn(s"$parentName --> $cellField is empty, skipping...")
       None
     }
 
   }
 
-  def parseCellToDataStructure(cellField: Cell, parentName: String): Option[Array[DataStructure]] ={
+  def parseCellToDataStructure(cellField: Cell, timeIndex: Long, parentName: String): Option[Array[DataStructure]] ={
 
     val childDimension = cellField.getDimensions.sum
 
@@ -49,18 +47,16 @@ class CellStructure extends CharArrayStructure with MatrixStructure {
 
         if (cellElemClassNames.equals("us.hebi.matlab.mat.format.MatMatrix")){
 
-          val result = parseMatrixToDataStructure(cellField.getMatrix(0), parentName)
+          val result = parseMatrixToDataStructure(cellField.getMatrix(0), timeIndex, parentName)
           if (result.isDefined) Some(result.get) else None
 
         } else {
           None
         }
       } else {
-        logger.warn(s"$parentName --> cell is not flat, skipping $cellField")
         None
       }
     } else {
-      logger.warn(s"$parentName --> $cellField is empty, skipping...")
       None
     }
 
@@ -84,11 +80,9 @@ class CellStructure extends CharArrayStructure with MatrixStructure {
           None
         }
       } else {
-        logger.warn(s"$parentName --> cell is not flat, skipping $cellField")
         None
       }
     } else {
-      logger.warn(s"$parentName --> $cellField is empty, skipping...")
       None
     }
 
