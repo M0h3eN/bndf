@@ -12,7 +12,6 @@ class CharStructure {
     if (charField.getNumElements != 0) {
       Some(Map(parentName -> charField.toString))
     } else {
-      logger.warn(s"$parentName --> $charField is empty, skipping...")
       None
     }
   }
