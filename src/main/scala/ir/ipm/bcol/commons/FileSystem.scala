@@ -32,7 +32,7 @@ class FileSystem {
 
 
     val pathLen = rootDir.split("/").length
-    val parentPath = rootDir.split("/").apply(pathLen-1)
+    val parentPath = rootDir.split("/").apply(pathLen-2)
     val experimentName = rootDir.split("/").last
 
     RootPathPropertiesEvaluator(experimentName, parentPath, rootDir)
