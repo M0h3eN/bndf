@@ -32,9 +32,8 @@ object RecordingDataLoader extends DataIngestion{
       .checkIfItExist("Experiments", "fullPath", experimentsRootDirectory)
       .nonExistenceExperiments
 
-    logger.info(s"Total number of ${writableExperiments.length} data directory found.")
-
     if (!writableExperiments.isEmpty){
+      logger.info(s"Total number of ${writableExperiments.length} data directory found.")
 
     writableExperiments.foreach(ex => {
 
