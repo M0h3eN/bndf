@@ -59,6 +59,7 @@ class DataIngestion{
       val eventMetaDatJsonDs = spark.read.json(eventMetaDatJson)
         .withColumn("_id", lit(eventFileName))
         .withColumn("HDFS_PATH", lit(eventFileHdfsWritePath))
+        .withColumn("IS_EVENT", lit(true))
 
       mongoConnector.Writer(pathProperties.experimentName, eventMetaDatJsonDs)
       logger.info(s"Start Writing Event Data for $eventFileName")
