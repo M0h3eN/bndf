@@ -84,7 +84,7 @@ class DataIngestion{
 
     }).reduce((ds1, ds2) => ds1.union(ds2))
 
-    val eventHeadStart = eventDataSet.select($"EventTime").first().getAs[Long](0)
+    val eventHeadStart = eventDataSet.orderBy($"EventTime").select($"EventTime").first().getAs[Long](0)
     val FilteredEventDataSet = eventDataSet
       .withColumn("EventTime", $"EventTime" + eventHeadStart)
       .filter($"EventTime" > 0)
