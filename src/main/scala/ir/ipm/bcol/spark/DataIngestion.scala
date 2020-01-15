@@ -93,7 +93,7 @@ class DataIngestion{
 
   }
 
-  def writeChannel(spark: SparkSession, eventDataSet: Dataset[Row], rootDir: String, pathProperties: PathPropertiesEvaluator): Unit={
+  def writeAndCreateChannel(spark: SparkSession, eventDataSet: Dataset[Row], rootDir: String, pathProperties: PathPropertiesEvaluator): Dataset[Row]={
     import spark.implicits._
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)
 
@@ -103,7 +103,7 @@ class DataIngestion{
 
     val channelFullPath = pathProperties.channelFileNames.map(names => s"$rootDir/$names.mat")
 
-    channelFullPath.foreach(channel => {
+    channelFullPath.map(channel => {
 
       val channelMatFile = readFromFile(channel)
       val channelEntry = channelMatFile.getEntries.asScala
@@ -136,7 +136,8 @@ class DataIngestion{
         .parquet(channelFileHdfsWritePath)
 
       channelTimeCounter = channelData.last.Time
-    })
-  }
+      channelDs.withColumn("channelName", lit(channel))
+    }).reduce((df1, df2) => df1.union(df2))
 
+  }
 }

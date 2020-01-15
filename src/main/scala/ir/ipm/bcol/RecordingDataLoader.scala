@@ -1,9 +1,9 @@
 package ir.ipm.bcol
 
 import com.typesafe.scalalogging.Logger
-
 import ir.ipm.bcol.commons.{MongoConnector, SparkConfig}
 import ir.ipm.bcol.spark.DataIngestion
+import org.apache.spark.sql.SaveMode
 
 
   /**
@@ -15,6 +15,7 @@ object RecordingDataLoader extends DataIngestion{
 
     val sparkConfig = new SparkConfig
     val dataIngestion = new DataIngestion
+    val HIVE_DB = "rawDataDB"
 
   def main(args : Array[String]) {
 
@@ -41,11 +42,14 @@ object RecordingDataLoader extends DataIngestion{
       val pathProperties = fileSystem.getPathProperties(ex, RawFileFormat)
 
       val eventData = dataIngestion.writeAndCreateEvent(spark, ex, pathProperties)
-      dataIngestion.writeChannel(spark, eventData.persist(), ex, pathProperties)
+      val channelData = dataIngestion.writeAndCreateChannel(spark, eventData.persist(), ex, pathProperties).persist()
 
+      channelData.write.mode(SaveMode.Overwrite)
+        .saveAsTable(HIVE_DB + "." + fileSystem.getLeafFileName(ex).replace("-", "_"))
       dataIngestion.writeExperimentMetaData(spark, ex)
 
       eventData.unpersist()
+      channelData.unpersist()
 
     })
 
