@@ -26,6 +26,8 @@ object RecordingDataLoader extends DataIngestion{
     val spark = sparkConfig.sparkSessionCreator(conf)
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)
 
+    if (!spark.catalog.databaseExists(HIVE_DB)) spark.sql(s"CREATE DATABASE $HIVE_DB")
+
     val experimentsRootDirectory = fileSystem.getListOfDirs(dir)
     if (experimentsRootDirectory.isEmpty) logger.error("", throw new Exception("Directory is empty"))
 
