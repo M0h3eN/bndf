@@ -4,7 +4,7 @@ import us.hebi.matlab.mat.types.Matrix
 
 trait MatrixStructure extends CharStructure {
 
-  def parseMatrixToMap[M](matrixField: Matrix, parentName: String): Option[Map[String, M]] = {
+  def parseMatrixToMap(matrixField: Matrix, parentName: String): Option[MatrixType] = {
 
     val childDimension = matrixField.getDimensions.sum
     val childColumn = matrixField.getNumCols
@@ -13,19 +13,17 @@ trait MatrixStructure extends CharStructure {
     if (matrixField.getNumElements != 0) {
       if (childDimension <= 2) {
 
-        val leafValue = matrixField.getDouble(0).asInstanceOf[M]
-        Some(Map(parentName -> leafValue))
+        val leafValue = matrixField.getDouble(0)
+        Some(MatrixType(Left(MatrixSingle(Map(parentName -> leafValue)))))
 
       } else {
-        if (childColumn.equals(1) && childRow < 100){
+        if (childColumn.equals(1)){
 
-          val leafValue = (0 until childRow).map(r => matrixField.getDouble(r)).toArray
-            .map(x => x.toString.concat(", "))
-            .foldLeft("[")((x, y) => x + y)
-            .foldRight("]")((x, y) => x + y)
-            .replace(", ]", "]")
+          val leafValue = (0 until childRow)
+            .map(r => matrixField.getDouble(r))
+            .toArray
 
-          Some(Map(parentName -> leafValue.asInstanceOf[M]))
+          Some(MatrixType(Right(MatrixArray(Map(parentName -> leafValue)))))
 
         } else {
           None
@@ -37,7 +35,7 @@ trait MatrixStructure extends CharStructure {
 
   }
 
-  def parseMatrixToDataStructure(matrixField: Matrix, timeIndex: Long,  parentName: String): Option[Array[DataStructure]] ={
+  def parseMatrixToDataStructure(matrixField: Matrix, timeIndex: Long,  parentName: String): Option[Array[DataStructure]] = {
 
     val childDimension = matrixField.getDimensions.sum
     val childColumn = matrixField.getNumCols

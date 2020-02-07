@@ -12,16 +12,22 @@ class SchemaCreator {
   val logger: Logger = Logger(s"${this.getClass.getName}")
   val structStructure = new StructStructure
 
-  def metaDataSchemaCreator(entries: Iterable[Entry], matFile: Mat5File): Map[String, Any] = {
+  def metaDataSchemaCreator[C](entries: Iterable[Entry], matFile: Mat5File): Map[String, C] = {
 
     val nestedMetaDataMapIterator = entries.map(it => {
 
       val parentFieldsName = it.getName
       val parentFieldsType = it.getValue.getType.toString
+      val charInit = Map(parentFieldsName -> "")
 
       val fieldsMap = parentFieldsType match {
-        case "char" => structStructure.parseCharToMap(matFile.getChar(parentFieldsName), parentFieldsName).getOrElse(Map(parentFieldsName -> ""))
-        case "struct" => structStructure.parseStructToMap(matFile.getStruct(parentFieldsName), parentFieldsName)
+        case "char" =>
+          val charRoot = structStructure.parseRootCharToMap(matFile.getChar(parentFieldsName), parentFieldsName)
+            .getOrElse(CharType(Left(CharSingle(charInit))))
+          charRoot.field.left.get.charField
+        case "struct" =>
+          val structRoot = structStructure.parseStructToMap(matFile.getStruct(parentFieldsName), parentFieldsName)
+          structRoot.field
         case _ => throw new Exception(s"Unrecognized type field: $it")
       }
 

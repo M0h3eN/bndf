@@ -2,13 +2,13 @@ package ir.ipm.bcol.structure
 
 import us.hebi.matlab.mat.types.Cell
 
-import scala.collection.immutable.ListMap
+class CellStructure extends CharStructure with MatrixStructure {
 
-class CellStructure extends CharArrayStructure with MatrixStructure {
-
-  def parseCellToMap(cellField: Cell, parentName: String): Option[Map[String, Any]] = {
+  def parseCellToMap(cellField: Cell, parentName: String): Option[CellType] = {
 
     val childDimension = cellField.getDimensions.sum
+    val charInit = Map(parentName -> "")
+    val matInit = Map(parentName -> -1.0)
 
     if (cellField.getNumElements != 0) {
       if (childDimension <= 2) {
@@ -17,15 +17,21 @@ class CellStructure extends CharArrayStructure with MatrixStructure {
 
         val leafValue = cellElemClassNames match {
 
-          case "us.hebi.matlab.mat.format.MatMatrix" => parseMatrixToMap(cellField.getMatrix(0), parentName).getOrElse(Map(parentName -> ""))
-          case "us.hebi.matlab.mat.format.MatChar" => parseCharToMap(cellField.getChar(0), parentName).getOrElse(Map(parentName -> ""))
+          case "us.hebi.matlab.mat.format.MatChar" =>
+            val charField: CharType = parseRootCharToMap(cellField.getChar(0), parentName)
+              .getOrElse(CharType(Left(CharSingle(charInit))))
+            CellType(Left(charField))
+
+          case "us.hebi.matlab.mat.format.MatMatrix" =>
+            val matrixField: MatrixType = parseMatrixToMap(cellField.getMatrix(0), parentName)
+              .getOrElse(MatrixType(Left(MatrixSingle(matInit))))
+            CellType(Right(matrixField))
+
           case _ => throw new Exception(s"Unrecognized type class: $cellElemClassNames")
 
         }
 
-        val sorteLeafValue = ListMap(leafValue.toSeq.sortBy(_._1) :_*)
-
-        Some(sorteLeafValue)
+        Some(leafValue)
 
       } else {
         None
