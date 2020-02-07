@@ -8,7 +8,7 @@ import ir.ipm.bcol.commons.M2eeJsonProtocol.MapJsonFormat
 import ir.ipm.bcol.evaluator.PathPropertiesEvaluator
 import ir.ipm.bcol.structure.SchemaCreator
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SaveMode, SparkSession}
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions.{lit, round}
 import us.hebi.matlab.mat.format.Mat5.readFromFile
 
 class DataIngestion{
@@ -64,6 +64,12 @@ class DataIngestion{
       mongoConnector.Writer(pathProperties.experimentName, eventMetaDatJsonDs)
       logger.info(s"Start Writing Event Data for $eventFileName")
 
+      val samplingRate = eventMetaDatJsonDs
+        .select($"Root.Property.SamplingRate")
+        .first()
+        .getAs[String](0)
+        .toDouble
+
       val eventData = schemaCreator.eventDataSchemaCreator(eventEntry, eventMatFile).toSeq
       val eventDataPar = spark.sparkContext.parallelize(eventData, numberOfSlices)
       val eventDs = eventDataPar.toDS()
@@ -74,6 +80,7 @@ class DataIngestion{
       val eventCompleteDs = eventTimeDs.as("df1")
         .join(eventCondDs.as("df2"), Seq("Id"))
         .select($"df1.EventValue".as("EventTime"), $"df2.EventValue".as("EventCode"))
+        .withColumn("SamplingRate", lit(samplingRate))
 
       eventCompleteDs
         .write
@@ -86,7 +93,7 @@ class DataIngestion{
 
     val eventHeadStart = eventDataSet.orderBy($"EventTime").select($"EventTime").first().getAs[Long](0)
     val FilteredEventDataSet = eventDataSet
-      .withColumn("EventTime", $"EventTime" + eventHeadStart)
+      .withColumn("EventTime", round((($"EventTime" + eventHeadStart)/$"SamplingRate")/1000))
       .filter($"EventTime" > 0)
 
     FilteredEventDataSet
