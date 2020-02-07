@@ -3,6 +3,7 @@ package ir.ipm.bcol.structure
 import us.hebi.matlab.mat.types.Struct
 
 import scala.collection.JavaConverters._
+import scala.collection.immutable
 import scala.collection.immutable.ListMap
 
 class StructStructure extends CellStructure {
@@ -18,9 +19,9 @@ class StructStructure extends CellStructure {
       val fiealdClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
       val fiealdInfo = fieldNames.zip(fiealdClassNames).toMap
 
-      val structFieldsMapIterator = fiealdInfo map { case (fn, cl) =>
+      val structFieldsMapIterator: immutable.Iterable[ListMap[String, Any]] = fiealdInfo map { case (fn, cl) =>
 
-        val mapFields = cl match {
+        val mapFields: Map[String, Any] = cl match {
 
           case "us.hebi.matlab.mat.format.MatStruct" => Map(fn -> parseStructToMap(structMat.getStruct(fn), fn))
           case "us.hebi.matlab.mat.format.MatCell" => parseCellToMap(structMat.getCell(fn), fn).getOrElse(Map(parentName -> ""))
