@@ -93,8 +93,10 @@ class DataIngestion{
 
     val eventHeadStart = eventDataSet.orderBy($"EventTime").select($"EventTime").first().getAs[Long](0)
     val FilteredEventDataSet = eventDataSet
-      .withColumn("EventTime", round((($"EventTime" + eventHeadStart)/$"SamplingRate")/1000))
+      .withColumn("EventTime", $"EventTime" + eventHeadStart)
       .filter($"EventTime" > 0)
+      .withColumn("EventTime", round((($"EventTime")/$"SamplingRate")/1000))
+      .drop($"SamplingRate")
 
     FilteredEventDataSet
 
@@ -143,7 +145,7 @@ class DataIngestion{
         .parquet(channelFileHdfsWritePath)
 
       channelTimeCounter = channelData.last.Time
-      channelDs.withColumn("channelName", lit(channel))
+      channelDs.withColumn("channelName", lit(fileSystem.getLeafFileName(channel)))
     }).reduce((df1, df2) => df1.union(df2))
 
   }
