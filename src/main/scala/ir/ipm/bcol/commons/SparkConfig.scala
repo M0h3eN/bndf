@@ -24,8 +24,6 @@ class SparkConfig {
       .set("spark.hadoop.dfs.replication", "3")
       .set("spark.mongodb.output.collection", "")
 
-
-
   }
 
   def sparkSessionCreator(conf: SparkConf) :SparkSession = {
