@@ -24,7 +24,7 @@ Currently, BDNS supports MAT files as raw input data with conditions described i
 ### Input MAT file structure
 
 <p align="center">
-<img width="460" height="300" src="src/main/docs/figures/MatTypeConstraint.svg">
+<img width="520" height="600" src="src/main/docs/figures/MatTypeConstraint.svg">
 </p>
 
 <ol type="a">
