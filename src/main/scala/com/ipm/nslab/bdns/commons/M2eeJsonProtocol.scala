@@ -1,5 +1,4 @@
-package ir.ipm.bcol.commons
-
+package com.ipm.nslab.bdns.commons
 
 import spray.json._
 

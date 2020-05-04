@@ -1,3 +1,3 @@
-package ir.ipm.bcol.evaluator
+package com.ipm.nslab.bdns.evaluator
 
 case class ExperimentMetaDataEvaluator(nonExistenceExperiments: Array[String])

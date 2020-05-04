@@ -1,4 +1,4 @@
-package ir.ipm.bcol.structure
+package com.ipm.nslab.bdns.structure
 
 import us.hebi.matlab.mat.types.Struct
 

@@ -1,8 +1,8 @@
-package ir.ipm.bcol
+package com.ipm.nslab.bdns
 
+import com.ipm.nslab.bdns.commons.{MongoConnector, SparkConfig}
+import com.ipm.nslab.bdns.spark.DataIngestion
 import com.typesafe.scalalogging.Logger
-import ir.ipm.bcol.commons.{MongoConnector, SparkConfig}
-import ir.ipm.bcol.spark.DataIngestion
 import org.apache.spark.sql.SaveMode
 
 

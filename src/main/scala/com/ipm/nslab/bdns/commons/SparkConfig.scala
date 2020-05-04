@@ -1,4 +1,4 @@
-package ir.ipm.bcol.commons
+package com.ipm.nslab.bdns.commons
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkConf
@@ -12,7 +12,7 @@ class SparkConfig {
       .setAppName(appName)
       .set("spark.sql.shuffle.partitions", s"$sqlShufflePar")
       .set("spark.default.parallelism", "500")
-      .set("spark.kryo.registrator", "ir.ipm.bcol.serialization.SparkKryoSerialization")
+      .set("spark.kryo.registrator", "com.ipm.nslab.bdns.serialization.SparkKryoSerialization")
       .set("spark.kryo.referenceTracking", "true")
       .set("spark.ui.showConsoleProgress", "false")
       .set("spark.sql.catalogImplementation", "hive")

@@ -1,8 +1,8 @@
-package ir.ipm.bcol.commons
+package com.ipm.nslab.bdns.commons
 
+import com.ipm.nslab.bdns.evaluator.ExperimentMetaDataEvaluator
 import com.mongodb.spark.MongoSpark
 import com.mongodb.spark.config.{ReadConfig, WriteConfig}
-import ir.ipm.bcol.evaluator.ExperimentMetaDataEvaluator
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import scala.util.Try

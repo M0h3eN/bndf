@@ -1,11 +1,10 @@
-package ir.ipm.bcol.serialization
+package com.ipm.nslab.bdns.serialization
 
 import com.esotericsoftware.kryo.Kryo
-import ir.ipm.bcol.commons.FileSystem
-import ir.ipm.bcol.commons.MongoConnector
-import ir.ipm.bcol.evaluator.{ExperimentMetaDataEvaluator, PathPropertiesEvaluator, RootPathPropertiesEvaluator}
-import ir.ipm.bcol.spark.DataIngestion
-import ir.ipm.bcol.structure.{CellStructure, CharArrayStructure, CharStructure, DataStructure, EventStructure, MatrixStructure, SchemaCreator, StructStructure}
+import com.ipm.nslab.bdns.commons.{FileSystem, MongoConnector}
+import com.ipm.nslab.bdns.evaluator.{ExperimentMetaDataEvaluator, PathPropertiesEvaluator, RootPathPropertiesEvaluator}
+import com.ipm.nslab.bdns.spark.DataIngestion
+import com.ipm.nslab.bdns.structure.{CellStructure, CharArrayStructure, CharStructure, DataStructure, EventStructure, MatrixStructure, SchemaCreator, StructStructure}
 import org.apache.log4j.Logger
 import org.apache.spark.serializer.KryoRegistrator
 
@@ -52,18 +51,18 @@ class SparkKryoSerialization extends KryoRegistrator {
     registerByName(kryo, "org.apache.avro.Schema$LongSchema")
     registerByName(kryo, "org.apache.avro.generic.GenericData$Array")
 
-    //ir.ipm.bcol
+    //com.ipm.nslab.bdns
 
-    //ir.ipm.bcol.commons
+    //com.ipm.nslab.bdns.commons
     kryo.register(classOf[FileSystem])
     kryo.register(classOf[MongoConnector])
-    //ir.ipm.bcol.evaluator
+    //com.ipm.nslab.bdns.evaluator
     kryo.register(classOf[ExperimentMetaDataEvaluator])
     kryo.register(classOf[PathPropertiesEvaluator])
     kryo.register(classOf[RootPathPropertiesEvaluator])
-    //ir.ipm.bcol.spark
+    //com.ipm.nslab.bdns.spark
     kryo.register(classOf[DataIngestion])
-    //ir.ipm.bcol.structure
+    //com.ipm.nslab.bdns.structure
     kryo.register(classOf[CellStructure])
     kryo.register(classOf[CharArrayStructure])
     kryo.register(classOf[CharStructure])

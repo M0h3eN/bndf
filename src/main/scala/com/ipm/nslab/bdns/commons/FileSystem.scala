@@ -1,8 +1,8 @@
-package ir.ipm.bcol.commons
+package com.ipm.nslab.bdns.commons
 
 import java.io.File
 
-import ir.ipm.bcol.evaluator.{PathPropertiesEvaluator, RootPathPropertiesEvaluator}
+import com.ipm.nslab.bdns.evaluator.{PathPropertiesEvaluator, RootPathPropertiesEvaluator}
 
 class FileSystem {
 

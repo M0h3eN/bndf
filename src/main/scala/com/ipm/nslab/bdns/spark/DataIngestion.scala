@@ -1,12 +1,12 @@
-package ir.ipm.bcol.spark
+package com.ipm.nslab.bdns.spark
 
 import scala.collection.JavaConverters._
 import com.typesafe.scalalogging.Logger
-import ir.ipm.bcol.commons.{FileSystem, MongoConnector}
 import spray.json._
-import ir.ipm.bcol.commons.M2eeJsonProtocol.MapJsonFormat
-import ir.ipm.bcol.evaluator.PathPropertiesEvaluator
-import ir.ipm.bcol.structure.SchemaCreator
+import com.ipm.nslab.bdns.commons.M2eeJsonProtocol.MapJsonFormat
+import com.ipm.nslab.bdns.commons.{FileSystem, MongoConnector}
+import com.ipm.nslab.bdns.evaluator.PathPropertiesEvaluator
+import com.ipm.nslab.bdns.structure.SchemaCreator
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions.{lit, round}
 import us.hebi.matlab.mat.format.Mat5.readFromFile
