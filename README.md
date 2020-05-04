@@ -23,7 +23,7 @@ Currently, BDNS supports MAT files as raw input data with conditions described i
 
 ### Input MAT file structure
 
-![test](MatTypeConstraint.svg)
+![test](src/main/docs/figures/MatTypeConstraint.svg)
 
 <ol type="a">
   <li>Raw MAT file consist of struct, cell, matrix and char type in root level of the file.</li>
@@ -35,12 +35,13 @@ Currently, BDNS supports MAT files as raw input data with conditions described i
 
 ## Getting Started
 
-## Building from Source
+### Building from Source
 
 You will need to have [Apache Maven](https://maven.apache.org/) 3.6.0 or later installed in order to compile BDNS.
 
-https://gitlab.com/neuroscience-lab/recordingdataloader.git
 ```bash
-$ git clone https://USER_NAME:PASSWORD@gitlab.com/neuroscience-lab/recordingdataloader.git
-
+$ git clone https://USER_NAME:PASSWORD@gitlab.com/neuroscience-lab/bdns.git
+$ cd bdns
+$ mvn install 
 ```
+Where **USER_NAME** and **PASSWORD** are user's gitlab account information.
