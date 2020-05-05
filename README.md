@@ -42,8 +42,21 @@ Currently, BDNS supports MAT files as raw input data with conditions described i
 You will need to have [Apache Maven](https://maven.apache.org/) 3.6.0 or later installed in order to compile BDNS.
 
 ```bash
-$ git clone https://USER_NAME:PASSWORD@gitlab.com/neuroscience-lab/bdns.git
+$ git clone https://USERNAME:PASSWORD@gitlab.com/neuroscience-lab/bdns.git
 $ cd bdns
 $ mvn install 
 ```
-Where **USER_NAME** and **PASSWORD** are user's gitlab account information.
+Where ``USERNAME`` and ``PASSWORD`` are gitlab account information.
+
+### Run and Deployment
+
+BDNS could run on any cluster or single machine running and configured following tools
+
+* [Apache Hadoop](https://hadoop.apache.org/)
+* [Apache Spark](https://spark.apache.org/)
+* [Apache Hive](https://hive.apache.org/)
+* [Apache Zeppelin](https://zeppelin.apache.org/)
+* [mongoDB](https://www.mongodb.com)
+
+For creating a private cluster and running BDNS see [BdnsCluster](https://gitlab.com/neuroscience-lab/bdnscluster).
+
