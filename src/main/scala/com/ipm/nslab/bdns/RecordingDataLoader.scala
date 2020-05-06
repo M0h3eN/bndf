@@ -9,7 +9,7 @@ import org.apache.spark.sql.SaveMode
   /**
  * @author ${Mohsen Hadianpour}
  */
-object RecordingDataLoader extends DataIngestion(_){
+object RecordingDataLoader extends DataIngestion(MONGO_URI = ""){
 
     override val logger: Logger = Logger(s"${this.getClass.getName}")
 
@@ -53,11 +53,13 @@ object RecordingDataLoader extends DataIngestion(_){
 
       eventData.unpersist()
       channelData.unpersist()
+      spark.close()
 
     })
 
   } else {
       logger.warn("There is no new data to write")
+      spark.close()
     }
   }
 }
