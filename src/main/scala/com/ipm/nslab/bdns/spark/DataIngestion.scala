@@ -11,12 +11,11 @@ import org.apache.spark.sql.{DataFrame, Dataset, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions.{lit, round}
 import us.hebi.matlab.mat.format.Mat5.readFromFile
 
-class DataIngestion{
+class DataIngestion(MONGO_URI: String){
 
   val logger: Logger = Logger(s"${this.getClass.getName}")
 
   val MONGO_DB_NAME = "MetaDataDB"
-  val MONGO_URI = "mongodb://root:ns123@mongos:27017/admin"
   val MONGO_COLLECTION = "Experiments"
 
   val fileSystem = new FileSystem

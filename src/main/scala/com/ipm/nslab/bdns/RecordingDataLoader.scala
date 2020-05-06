@@ -9,12 +9,11 @@ import org.apache.spark.sql.SaveMode
   /**
  * @author ${Mohsen Hadianpour}
  */
-object RecordingDataLoader extends DataIngestion{
+object RecordingDataLoader extends DataIngestion(_){
 
     override val logger: Logger = Logger(s"${this.getClass.getName}")
 
     val sparkConfig = new SparkConfig
-    val dataIngestion = new DataIngestion
     val HIVE_DB = "rawDataDB"
 
   def main(args : Array[String]) {
@@ -22,6 +21,8 @@ object RecordingDataLoader extends DataIngestion{
     if(args.isEmpty) logger.error("", throw new Exception("Path must specified"))
 
     val dir = args.apply(0)
+    val MONGO_URI = args.apply(1)
+    val dataIngestion = new DataIngestion(MONGO_URI)
     val conf = sparkConfig.sparkInitialConf("Recording Data Loader", MONGO_URI, MONGO_DB_NAME, numberOfSqlPartition)
     val spark = sparkConfig.sparkSessionCreator(conf)
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)
