@@ -82,4 +82,6 @@ For creating a private cluster and running BDNS see [BdnsCluster](https://gitlab
 It is very important input data placed in the same network as cluster or, a fast access network that communicates with cluster's network. 
 
 * Create a shared storage accessible by all the nodes in the cluster.
-* Copy input data directly in HDFS using [WebHDFS REST API](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/WebHDFS.html) (Not implemented yet). 
+* Copy input data directly in HDFS using [WebHDFS REST API](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/WebHDFS.html) (Not implemented yet).
+
+Otherwise, data locality could create major bottlenecks while processing data with Spark.   
