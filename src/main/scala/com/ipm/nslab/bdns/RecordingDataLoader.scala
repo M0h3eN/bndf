@@ -53,9 +53,9 @@ object RecordingDataLoader extends DataIngestion(MONGO_URI = ""){
 
       eventData.unpersist()
       channelData.unpersist()
-      spark.close()
-
     })
+
+      spark.close()
 
   } else {
       logger.warn("There is no new data to write")
