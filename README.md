@@ -77,3 +77,9 @@ $ spark-submit \
 Spark-submit's parameters detailed information are available in [submitting-applications](https://spark.apache.org/docs/latest/submitting-applications.html).
 For creating a private cluster and running BDNS see [BdnsCluster](https://gitlab.com/neuroscience-lab/bdnscluster).
 
+### Data Locality
+
+It is very important input data placed in the same network as cluster or, a fast access network that communicates with cluster's network. 
+
+* Create a shared storage accessible by all the nodes in the cluster.
+* Copy input data directly in HDFS using [WebHDFS REST API](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/WebHDFS.html) (Not implemented yet). 
