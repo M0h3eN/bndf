@@ -55,8 +55,25 @@ BDNS could run on any cluster or single machine running and configured following
 * [Apache Hadoop](https://hadoop.apache.org/)
 * [Apache Spark](https://spark.apache.org/)
 * [Apache Hive](https://hive.apache.org/)
-* [Apache Zeppelin](https://zeppelin.apache.org/)
+* [Apache Zeppelin](https://zeppelin.apache.org/) (Optional)
 * [mongoDB](https://www.mongodb.com)
 
+BDNS executive jar file take two parameter in the following order 
+
+* DATA_PATH
+* MONGO_URI
+
+```bash
+$ spark-submit \ 
+    --class com.ipm.nslab.bdns.RecordingDataLoader \
+    --master SPARK_MASTER(s)_URL | yarn | mesos \
+    --deploy-mode client | cluster \ 
+    --executor-memory ${SPARK_EXECUTOR_MEMORY}G \
+    --total-executor-cores ${SPARK_EXECUTOR_CORES} \
+    --driver-memory ${SPARK_DRIVER_MEMORY}G \
+    PATH_TO_BDNS_JAR_FILE/bdns-0.0.1.jar DATA_PATH  MONGO_URI
+```
+
+Spark-submit's parameters detailed information are available in [submitting-applications](https://spark.apache.org/docs/latest/submitting-applications.html).
 For creating a private cluster and running BDNS see [BdnsCluster](https://gitlab.com/neuroscience-lab/bdnscluster).
 
