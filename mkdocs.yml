@@ -1,1 +1,3 @@
-site_name: My Docs
+site_name: BDNS
+repo_url: https://gitlab.com/neuroscience-lab/bdns
+docs_dir: docs
