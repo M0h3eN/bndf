@@ -1,14 +1,323 @@
 # BDNS User Guide
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+## Introduction
+
+BDNS is a library for storing and processing large-scale neural data included, but not limited to single(multi) unit and multichannel 
+array recording data in a distributed manner. BDNS's ecosystem is build on top of [Apache Spark](https://spark.apache.org/) 
+and [Apache Hadoop](https://hadoop.apache.org/). For storing large-scale raw data, [Apache Parquet](https://parquet.apache.org)
+a columnar data structure and [Apache Hive](https://hive.apache.org/) are used on top of [Hadoop distributed file system (HDFS)](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html). 
+Meta-data information of raw data, are constructed as nested [JSON](https://www.json.org/json-en.htm) files and stored in 
+[mongoDB](https://www.mongodb.com). BDNS's APIs can be used in Scala, Java, Python, R and partially in Matlab.   
+
+## BDNS Ecosystem
+
+The ecosystem of the BDNS and it's open source requirement can be found in the following diagram.
+
+<p align="center">
+<img src="figures/BdnsEcosystem.png">
+</p>
 
 # ARCHITECTURE
 
+BDNS library designed with focus on optimising neural data analysis from two point of view **Data Storing** and **Data Processing**.
+       
+## Input data
+
+Currently, BDNS supports MAT files as raw input data with conditions described in [MAT File Library](https://github.com/HebiRobotics/MFL). 
+The structure of the input MAT files can be shown in the diagram below.
+
+<p align="center">
+<img width="420" src="figures/MatTypeConstraint.png">
+</p>
+Where in the diagram:
+<ol type="a">
+  <li>Raw MAT file consist of struct, cell, matrix and char type in root level of the file.</li>
+  <li>Each fields in file could have one of the illustrated structures, while struct and cell type could be nested through next level.</li>
+  <li>One-level Struct type nesting, it could be nested through itself or the other types.</li>
+  <li>Struct field is capable of n-level nesting.</li>
+  <li>The last state of nesting struct field, resulting one of the char or matrix field being the leaf node.</li>
+</ol>  
+
+## Data Storing
+From Data Storing point of view BDNS construct both scalable and standardize formats for meta-data and large scale raw data. 
+The detail structure of the stored data could be found in the diagram below.
+
+<p align="center">
+<img src="figures/DataStoring.png">
+</p>
+Where in the diagram:
+<ol type="a">
+  <li>Nested JSON structure which stored in **mongoDB**. Fields such as `id`, `file_name`, `HDFS_path` and `properties` are necessary while others are optional and could vary for different experiments.</li>
+  <li>Horizontally scalable columnar structure which stored as **Parquet** format in HDFS. It could contains more optional columns .</li>
+</ol>  
+
+## Data Processing
+**Spark** Rich APIS made BDNS flexible in Data Processing with Scala, Java, Python and R. Even one could use partially Matlab. 
+BDNS also could be used with third party libraries such as [Thunder](http://docs.thunder-project.org/)
+through spark's Python API. BDNS Data processing flexible options could be found in more detail in the following diagram.
+
+<p align="center">
+<img src="figures/DataProcessingNoMark.png">
+</p>   
 
 # INSTALLATION
 
+## Building BDNS from Source
+
+You will need to have [Apache Maven](https://maven.apache.org/) 3.6.0 or later installed in order to compile BDNS.
+
+```bash
+$ git clone https://gitlab.com/neuroscience-lab/bdns
+$ cd bdns
+$ mvn install 
+```
+
+BDNS could run on any cluster or single machine running and configured following open source tools
+
+* [Apache Hadoop](https://hadoop.apache.org/)
+* [Apache Spark](https://spark.apache.org/)
+* [Apache Hive](https://hive.apache.org/)
+* [Apache Zeppelin](https://zeppelin.apache.org/) (Optional)
+* [mongoDB](https://www.mongodb.com)
+
+BDNS executive jar file take two parameter in the following order 
+
+* DATA_PATH
+* MONGO_URI
+
+```bash
+$ spark-submit \ 
+    --class com.ipm.nslab.bdns.RecordingDataLoader \
+    --master SPARK_MASTER(s)_URL | yarn | mesos \
+    --deploy-mode client | cluster \ 
+    --executor-memory ${SPARK_EXECUTOR_MEMORY}G \
+    --total-executor-cores ${SPARK_EXECUTOR_CORES} \
+    --driver-memory ${SPARK_DRIVER_MEMORY}G \
+    PATH_TO_BDNS_JAR_FILE/bdns-0.0.1.jar DATA_PATH  MONGO_URI
+```
+
+Spark-submit's parameters detailed information are available in [submitting-applications](https://spark.apache.org/docs/latest/submitting-applications.html).
+For creating a private cluster and running BDNS see [BdnsCluster](https://gitlab.com/neuroscience-lab/bdnscluster).
+
 # BENCHMARKING
+
+Benchmark result for Running BDNS on different nodes
 
 # DEPLOYING BDNS
 
+## Deploying BDNS on a Private Cluster
+
+Instruction for deploying BDNS on private cluster using [Docker](https://www.docker.com/) is fully described at [BdnsCluster](https://gitlab.com/neuroscience-lab/bdnscluster).
+
 # BDNS'S APIS
+
+## Scala 
+
+For analyzing structured data we could use either Spark's shell or [Apache Zeppelin](https://zeppelin.apache.org/). 
+For communicating with mongoDB and hive required dependencies should include in spark-sumbit (see [conf](https://gitlab.com/neuroscience-lab/bdnscluster/-/blob/master/volumes/zeppelin/conf/zeppelin-env.sh)). 
+This examples are using sample-data available in [sample-data](https://www.dropbox.com/sh/64nsb3wrzvmbm85/AABPlZYhunVCx70KYtjDD_D4a?dl=0).
+### Define MongoReader
+
+```scala
+import com.mongodb.spark.MongoSpark
+import com.mongodb.spark.config._
+
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SaveMode, SparkSession}
+
+val MONGO_DB_NAME = "MetaDataDB"
+val MONGO_URI = s"${MONGO_URI}"
+val MONGO_COLLECTION = "Experiments"
+
+def Reader(spark: SparkSession,  uri: String, database: String, collection: String) :DataFrame = {
+
+    val readConfig = ReadConfig(Map("uri" -> uri, "database" -> database, "collection" -> collection))
+    MongoSpark.load(spark, readConfig)
+
+  }
+```
+`MONGO_URI` is the mongoDB URL defined in the cluster setup. if you used [BdnsCluster](https://gitlab.com/neuroscience-lab/bdnscluster) 
+for deploying BDNS, change this to:
+
+```scala
+val MONGO_URI = "mongodb://root:ns123@mongos:27017/admin"
+```
+
+### Check Existing Experiments
+
+```scala
+val experimentMetaData = Reader(spark, MONGO_URI, MONGO_DB_NAME, MONGO_COLLECTION)
+// Spark Shell
+experimentMetaData.show(50)
+// Zeppelin
+z.show(experimentMetaData.limit(50))
+```  
+Output:
+
+```text
++----------------------------------+-----------------------------------------------+-----------+
+|_id                               |fullPath                                       |parentPath |
++----------------------------------+-----------------------------------------------+-----------+
+|Experiment_Kopo_2018-04-25_J9_8600|/sample-data/Experiment_Kopo_2018-04-25_J9_8600|sample-data|
+|Experiment_Kopo_2018-04-25_J9_8900|/sample-data/Experiment_Kopo_2018-04-25_J9_8900|sample-data|
++----------------------------------+-----------------------------------------------+-----------+
+```
+### Read `Experiment_Kopo_2018-04-25_J9_8600` Directly from HDFS
+
+#### Check meta-data
+
+* Read Schema
+```scala
+val metaData = Reader(spark, MONGO_URI, MONGO_DB_NAME, "Experiment_Kopo_2018-04-25_J9_8600")
+metaData.printSchema
+```  
+
+Output:
+
+```text
+root
+ |-- HDFS_PATH: string (nullable = true)
+ |-- IS_EVENT: boolean (nullable = true)
+ |-- Root: struct (nullable = true)
+ |    |-- Property: struct (nullable = true)
+ |    |    |-- ADCRange: string (nullable = true)
+ |    |    |-- Root: string (nullable = true)
+ |    |    |-- SamplingRate: string (nullable = true)
+ |    |-- Root: string (nullable = true)
+ |    |-- Total_Samples: string (nullable = true)
+ |-- _id: string (nullable = true)
+ |-- channelik0: struct (nullable = true)
+ |    |-- Property: struct (nullable = true)
+ .    .    
+ .    .   
+ .    . 
+```
+* Read Data
+
+```scala
+metaData.select($"HDFS_PATH", $"IS_EVENT", $"Root", $"_id").show(1, false)
+```
+
+Output:
+
+```text
++------------------------------------------------------------------------+--------+------------------------------+---------+
+|HDFS_PATH                                                               |IS_EVENT|Root                          |_id      |
++------------------------------------------------------------------------+--------+------------------------------+---------+
+|/sample-data/Experiment_Kopo_2018-04-25_J9_8600/events/eventik_1.parquet|true    |[[10.0, '10', 40000.0], , 0.0]|eventik_1|
++------------------------------------------------------------------------+--------+------------------------------+---------+
+```
+
+#### Check events data
+
+* Read All events
+
+```scala
+val metaDf = metaData.select($"_id", $"HDFS_PATH").filter($"IS_EVENT".isNotNull)
+val namespathsMap = metaDf.collect.map(x => Array(x.getAs("_id").toString, x.getAs("HDFS_PATH").toString))
+
+val eventsDataSet = namespathsMap.map(x => {
+    
+    spark
+        .read
+        .parquet(x.apply(1))
+        .withColumn("eventsName", lit(x.apply(0)))
+    
+}).reduce((df1, df2) => df1.union(df2)).persist
+```
+* Read Schema
+
+```scala
+eventsDataSet.printSchema
+```
+
+Output:
+
+```text
+root
+ |-- EventTime: long (nullable = true)
+ |-- EventCode: long (nullable = true)
+ |-- SamplingRate: double (nullable = true)
+ |-- eventsName: string (nullable = false)
+```
+
+* Read Data
+
+```scala
+eventsDataSet.orderBy($"EventTime").show(5)
+```
+
+Output:
+
+```text
++---------+---------+------------+----------+
+|EventTime|EventCode|SamplingRate|eventsName|
++---------+---------+------------+----------+
+| -1532000|        0|     40000.0| eventik_1|
+|       -1|        1|     40000.0| eventik_1|
+|  1634585|        0|     40000.0| eventik_1|
+|  1673707|        9|     40000.0| eventik_1|
+|  1675086|      128|     40000.0| eventik_1|
++---------+---------+------------+----------+
+```
+
+We can get summary of channel data with the same approach.
+
+### Read `Experiment_Kopo_2018-04-25_J9_8600` from HIVE
+
+Reading data from Hive has two key advantages
+
+* It is faster to read
+* All channel and events data are stored in long table
+* It provide optimized sql queries
+
+#### Show Existing Hive Databases
+
+```scala
+spark.sql("SHOW DATABASES").show()
+```
+Output:
+
+```text
++------------+
+|databaseName|
++------------+
+|     default|
+|   rawdatadb|
++------------+
+```
+
+#### Using `rawdatadb` database and listing tables
+
+```scala
+spark.sql("USE rawdatadb")
+spark.sql("SHOW TABLES").show()
+```
+Output:
+
+```text
++---------+----------------------------------+-----------+
+|database |tableName                         |isTemporary|
++---------+----------------------------------+-----------+
+|rawdatadb|experiment_kopo_2018_04_25_j9_8600|false      |
+|rawdatadb|experiment_kopo_2018_04_25_j9_8900|false      |
++---------+----------------------------------+-----------+
+```
+#### Show data
+
+```roomsql
+SELECT * FROM experiment_kopo_2018_04_25_j9_8600 LIMIT 5
+```
+|  Signal |  Time | ChannelName  |
+|---|---|---|
+| 1.3995862007141113  |  40004241 | channelik5_1  |
+| 1.3884074687957764  |  40004245 | channelik5_1  |
+|  1.3884074687957764 | 40004244  | channelik5_1  |
+| 1.363419771194458  | 40004242  |  channelik5_1 |
+
+## Python
+
+BDNS Python API could be used with [Thunder](http://docs.thunder-project.org/) or directly with Spark's Python API.
+
+## R
+
+## Matlab

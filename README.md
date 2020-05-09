@@ -24,7 +24,7 @@ Currently, BDNS supports MAT files as raw input data with conditions described i
 ### Input MAT file structure
 
 <p align="center">
-<img width="520" height="600" src="src/main/docs/figures/MatTypeConstraint.svg">
+<img width="420" src="docs/figures/MatTypeConstraint.png">
 </p>
 
 <ol type="a">
@@ -42,11 +42,10 @@ Currently, BDNS supports MAT files as raw input data with conditions described i
 You will need to have [Apache Maven](https://maven.apache.org/) 3.6.0 or later installed in order to compile BDNS.
 
 ```bash
-$ git clone https://USERNAME:PASSWORD@gitlab.com/neuroscience-lab/bdns.git
+$ git clone https://gitlab.com/neuroscience-lab/bdns
 $ cd bdns
 $ mvn install 
 ```
-Where ``USERNAME`` and ``PASSWORD`` are gitlab account information.
 
 ### Run and Deployment
 
@@ -84,4 +83,8 @@ It is very important input data placed in the same network as cluster or, a fast
 * Create a shared storage accessible by all the nodes in the cluster.
 * Copy input data directly in HDFS using [WebHDFS REST API](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/WebHDFS.html) (Not implemented yet).
 
-Otherwise, data locality could create major bottlenecks while processing data with Spark.   
+Otherwise, data locality could create major bottlenecks while processing data with Spark.
+
+## Documentation
+
+BDNS documentation are available in [bdns-doc](https://bdns.readthedocs.io/).
