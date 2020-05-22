@@ -16,4 +16,15 @@ class CharStructure {
     }
   }
 
+  def getCharValue(charField: Char, parentName: String, field: String): Option[String] = {
+
+    if(parentName.equalsIgnoreCase(field)){
+       Some(charField.toString)
+    } else{
+      None
+    }
+  }
+
+
+
 }
