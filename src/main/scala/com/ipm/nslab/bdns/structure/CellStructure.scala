@@ -88,4 +88,31 @@ class CellStructure extends CharArrayStructure with MatrixStructure {
 
   }
 
+  def getCellValue(cellField: Cell, parentName: String, field: String): Option[String] ={
+
+    val childDimension = cellField.getDimensions.sum
+
+    if (cellField.getNumElements != 0) {
+      if (childDimension <= 2) {
+
+        val cellElemClassNames = cellField.get(0).getClass.toString.split(" ").apply(1)
+
+        val leafValue = cellElemClassNames match {
+
+          case "us.hebi.matlab.mat.format.MatChar" => getCharValue(cellField.getChar(0), parentName, field)
+          case _ => None
+
+        }
+
+        leafValue
+
+      } else {
+        None
+      }
+    } else {
+      None
+    }
+
+  }
+
 }
