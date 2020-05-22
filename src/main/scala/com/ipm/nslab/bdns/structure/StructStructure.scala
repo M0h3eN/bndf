@@ -175,14 +175,14 @@ class StructStructure extends CellStructure {
 
         })
 
-         structFieldsValue.filter(_.isDefined).apply(0)
+        Some(structFieldsValue.flatten.apply(0))
 
       } else {
 
         val fn = fieldsInfoFiltered.apply(0)._1
         val cl = fieldsInfoFiltered.apply(0)._2
 
-        val mapFields = cl match {
+        val mapFields: Option[String] = cl match {
 
           case "us.hebi.matlab.mat.format.MatChar" => getCharValue(structMat.getChar(fn), fn, field)
           case "us.hebi.matlab.mat.format.MatCell" => getCellValue(structMat.getCell(fn), fn, field)
