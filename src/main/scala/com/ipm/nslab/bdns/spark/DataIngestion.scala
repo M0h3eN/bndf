@@ -53,21 +53,19 @@ class DataIngestion(MONGO_URI: String){
 
       logger.info(s"Start Writing Event MetaData for $eventFileName")
 
-      val eventMetaData = schemaCreator.metaDataSchemaCreator(eventEntry, eventMatFile)
-      val eventMetaDatJson = spark.createDataset(Seq(eventMetaData.toJson.toString()))
-      val eventMetaDatJsonDs = spark.read.json(eventMetaDatJson)
+      val samplingRate = schemaCreator.getValue(eventEntry, eventMatFile, "SamplingRate").toDouble
+      val fileInfo = schemaCreator.getValue(eventEntry, eventMatFile, "long_name")
+
+      val eventMetaData: Map[String, Any] = schemaCreator.metaDataSchemaCreator(eventEntry, eventMatFile)
+      val eventMetaDatJson: Dataset[String] = spark.createDataset(Seq(eventMetaData.toJson.toString()))
+      val eventMetaDatJsonDs: DataFrame = spark.read.json(eventMetaDatJson)
         .withColumn("_id", lit(eventFileName))
+        .withColumn("FileInfo", lit(fileInfo))
         .withColumn("HDFS_PATH", lit(eventFileHdfsWritePath))
         .withColumn("IS_EVENT", lit(true))
 
       mongoConnector.Writer(pathProperties.experimentName, eventMetaDatJsonDs)
       logger.info(s"Start Writing Event Data for $eventFileName")
-
-      val samplingRate = eventMetaDatJsonDs
-        .select($"Root.Property.SamplingRate")
-        .first()
-        .getAs[String](0)
-        .toDouble
 
       val eventData = schemaCreator.eventDataSchemaCreator(eventEntry, eventMatFile).toSeq
       val eventDataPar = spark.sparkContext.parallelize(eventData, numberOfSlices)
@@ -88,7 +86,7 @@ class DataIngestion(MONGO_URI: String){
 
       eventCompleteDs
 
-    }).reduce((ds1, ds2) => ds1.union(ds2))
+    }).reduce((ds1, ds2) => ds1.unionByName(ds2))
 
     val eventHeadStart = eventDataSet.orderBy($"EventTime").select($"EventTime").first().getAs[Long](0)
     val FilteredEventDataSet = eventDataSet
@@ -121,10 +119,12 @@ class DataIngestion(MONGO_URI: String){
 
       logger.info(s"Start Writing Channel MetaData for $channelFileName")
 
+      val fileInfo = schemaCreator.getValue(channelEntry, channelMatFile, "long_name")
       val channelMetaData = schemaCreator.metaDataSchemaCreator(channelEntry, channelMatFile)
       val channelMetaDatJson = spark.createDataset(Seq(channelMetaData.toJson.toString()))
       val channelMetaDatJsonDs = spark.read.json(channelMetaDatJson)
         .withColumn("_id", lit(channelFileName))
+        .withColumn("FileInfo", lit(fileInfo))
         .withColumn("HDFS_PATH", lit(channelFileHdfsWritePath))
 
       mongoConnector.Writer(pathProperties.experimentName, channelMetaDatJsonDs)
@@ -144,8 +144,10 @@ class DataIngestion(MONGO_URI: String){
         .parquet(channelFileHdfsWritePath)
 
       channelTimeCounter = channelData.last.Time
-      channelDs.withColumn("channelName", lit(fileSystem.getLeafFileName(channel)))
-    }).reduce((df1, df2) => df1.union(df2))
+      channelDs
+        .withColumn("channelName", lit(fileSystem.getLeafFileName(channel)))
+        .withColumn("FileInfo", lit(fileInfo))
+    }).reduce((df1, df2) => df1.unionByName(df2))
 
   }
 }
