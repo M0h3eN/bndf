@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ipm.nslab.bdns</groupId>
   <artifactId>bdns</artifactId>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <name>${project.artifactId}</name>
   <description>Big Data Neuroscience</description>
   <inceptionYear>2019</inceptionYear>
