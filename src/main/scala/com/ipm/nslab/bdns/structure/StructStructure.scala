@@ -175,7 +175,13 @@ class StructStructure extends CellStructure {
 
         })
 
-        Some(structFieldsValue.flatten.apply(0))
+        val leafValue = structFieldsValue.flatten
+
+        if (leafValue.isEmpty){
+          None
+        } else {
+          Some(leafValue.apply(0))
+        }
 
       } else {
 
