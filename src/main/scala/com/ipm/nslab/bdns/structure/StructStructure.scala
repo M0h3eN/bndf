@@ -144,4 +144,61 @@ class StructStructure extends CellStructure {
     }
   }
 
+
+  def getStructValue(structMat: Struct, parentName: String, field: String): Option[String] ={
+
+    val fieldNames = structMat.getFieldNames.asScala.toArray
+    val structDimension = structMat.getDimensions.sum
+
+    if (structDimension <= 2) {
+
+      val fiealdClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
+      val fiealdInfo = fieldNames.zip(fiealdClassNames)
+      val fieldsInfoFiltered = fiealdInfo.filter(_._1.equalsIgnoreCase(field))
+
+      if(fieldsInfoFiltered.isEmpty){
+
+        val structFieldsValue = fiealdInfo.map(x => {
+
+          val fn = x._1
+          val cl = x._2
+
+          val mapFields: Option[String] = cl match {
+
+            case "us.hebi.matlab.mat.format.MatStruct" => getStructValue(structMat.getStruct(fn), fn, field)
+            case "us.hebi.matlab.mat.format.MatCell" => getCellValue(structMat.getCell(fn), fn, field)
+            case _ => None
+
+          }
+
+          mapFields
+
+        })
+
+         structFieldsValue.filter(_.isDefined).apply(0)
+
+      } else {
+
+        val fn = fieldsInfoFiltered.apply(0)._1
+        val cl = fieldsInfoFiltered.apply(0)._2
+
+        val mapFields = cl match {
+
+          case "us.hebi.matlab.mat.format.MatChar" => getCharValue(structMat.getChar(fn), fn, field)
+          case "us.hebi.matlab.mat.format.MatCell" => getCellValue(structMat.getCell(fn), fn, field)
+          case _ => None
+
+        }
+
+         mapFields
+
+      }
+
+    } else {
+      None
+    }
+
+  }
+
+
 }
