@@ -34,6 +34,44 @@ class SchemaCreator {
     sortedStructMap
   }
 
+  def getValue(entries: Iterable[Entry], matFile: Mat5File, field: String): String = {
+
+    val entryInfo = entries.map(x => (x.getName, x.getValue.getType.toString)).filter(_._1.equalsIgnoreCase(field)).toArray
+
+    if (entryInfo.isEmpty){
+
+      val nestedMetaDataMapIterator = entries.map(it => {
+
+        val parentFieldsName = it.getName
+        val parentFieldsType = it.getValue.getType.toString
+
+        val value = parentFieldsType match {
+          case "struct" => structStructure.getStructValue(matFile.getStruct(parentFieldsName), parentFieldsName, field)
+          case _ => None
+        }
+
+        value
+
+      })
+
+      nestedMetaDataMapIterator.toArray.filter(_.isDefined).apply(0).get
+
+    } else {
+
+      val parentFieldsType = entryInfo.apply(0)._2
+      val parentFieldsName = entryInfo.apply(0)._1
+
+      val value = parentFieldsType match {
+        case "char" => structStructure.getCharValue(matFile.getChar(parentFieldsName), parentFieldsName, field)
+        case _ => throw new Exception(s"Char type expected but found: $parentFieldsType")
+      }
+
+      value.get
+
+    }
+
+  }
+
   def rawDataSchemaCreator(entries: Iterable[Entry], timeIndex: Long,  matFile: Mat5File): Array[DataStructure] = {
 
     val nestedMetaDataMapIterator = entries.map(it => {
