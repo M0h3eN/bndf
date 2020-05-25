@@ -91,4 +91,43 @@ trait MatrixStructure extends CharStructure {
 
   }
 
+  def getMatrixValue(matrixField: Matrix, parentName: String, field: String): Option[String] = {
+
+    val childDimension = matrixField.getDimensions.sum
+    val childColumn = matrixField.getNumCols
+    val childRow = matrixField.getNumRows
+
+    if(parentName.equalsIgnoreCase(field)) {
+
+      if (matrixField.getNumElements != 0) {
+        if (childDimension <= 2) {
+
+          val leafValue = matrixField.getDouble(0).toString
+          Some(leafValue)
+
+        } else {
+          if (childColumn.equals(1) && childRow < 100) {
+
+            val leafValue = (0 until childRow).map(r => matrixField.getDouble(r)).toArray
+              .map(x => x.toString.concat(", "))
+              .foldLeft("[")((x, y) => x + y)
+              .foldRight("]")((x, y) => x + y)
+              .replace(", ]", "]")
+
+            Some(leafValue)
+
+          } else {
+            None
+          }
+        }
+      } else {
+        None
+      }
+    } else {
+      None
+    }
+
+  }
+
+
 }

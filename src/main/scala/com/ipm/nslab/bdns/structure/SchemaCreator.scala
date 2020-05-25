@@ -54,7 +54,13 @@ class SchemaCreator {
 
       })
 
-      nestedMetaDataMapIterator.toArray.filter(_.isDefined).apply(0).get
+      val leafValue = nestedMetaDataMapIterator.toArray.flatten
+
+      if (leafValue.isEmpty){
+        ""
+      } else {
+        leafValue.apply(0)
+      }
 
     } else {
 
