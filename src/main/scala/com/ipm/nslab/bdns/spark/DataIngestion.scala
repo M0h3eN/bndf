@@ -8,7 +8,7 @@ import com.ipm.nslab.bdns.commons.{FileSystem, MongoConnector}
 import com.ipm.nslab.bdns.evaluator.PathPropertiesEvaluator
 import com.ipm.nslab.bdns.structure.SchemaCreator
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SaveMode, SparkSession}
-import org.apache.spark.sql.functions.{lit, round}
+import org.apache.spark.sql.functions.{lit, typedLit}
 import us.hebi.matlab.mat.format.Mat5.readFromFile
 
 class DataIngestion(MONGO_URI: String){
@@ -53,14 +53,15 @@ class DataIngestion(MONGO_URI: String){
 
       logger.info(s"Start Writing Event MetaData for $eventFileName")
 
-      val samplingRate = schemaCreator.getValue(eventEntry, eventMatFile, "SamplingRate").toDouble
+      val samplingRate = schemaCreator.getValue(eventEntry, eventMatFile, "SamplingRate").distinct.apply(0).toDouble
       val fileInfo = schemaCreator.getValue(eventEntry, eventMatFile, "long_name")
+        .map(_.replace("'", ""))
 
       val eventMetaData: Map[String, Any] = schemaCreator.metaDataSchemaCreator(eventEntry, eventMatFile)
-      val eventMetaDatJson: Dataset[String] = spark.createDataset(Seq(eventMetaData.toJson.toString()))
+      val eventMetaDatJson: Dataset[String] = spark.createDataset(Seq(eventMetaData.toJson.toString().replace("'", "")))
       val eventMetaDatJsonDs: DataFrame = spark.read.json(eventMetaDatJson)
         .withColumn("_id", lit(eventFileName))
-        .withColumn("FileInfo", lit(fileInfo))
+        .withColumn("FileInfo", typedLit[Array[String]](fileInfo))
         .withColumn("HDFS_PATH", lit(eventFileHdfsWritePath))
         .withColumn("IS_EVENT", lit(true))
 
@@ -92,8 +93,6 @@ class DataIngestion(MONGO_URI: String){
     val FilteredEventDataSet = eventDataSet
       .withColumn("EventTime", $"EventTime" + eventHeadStart)
       .filter($"EventTime" > 0)
-      .withColumn("EventTime", round((($"EventTime")/$"SamplingRate")/1000))
-      .drop($"SamplingRate")
 
     FilteredEventDataSet
 
@@ -120,8 +119,20 @@ class DataIngestion(MONGO_URI: String){
       logger.info(s"Start Writing Channel MetaData for $channelFileName")
 
       val fileInfo = schemaCreator.getValue(channelEntry, channelMatFile, "long_name")
+        .filterNot(_.equalsIgnoreCase("Root"))
+        .reduce((x, y) => {
+          if(x.length > y.length) {
+            x.diff(y)
+          } else {
+            y.diff(x)
+          }
+        })
+        .replace("/", "")
+        .replace("'", "")
+        .asInstanceOf[String]
+
       val channelMetaData = schemaCreator.metaDataSchemaCreator(channelEntry, channelMatFile)
-      val channelMetaDatJson = spark.createDataset(Seq(channelMetaData.toJson.toString()))
+      val channelMetaDatJson = spark.createDataset(Seq(channelMetaData.toJson.toString().replace("'", "")))
       val channelMetaDatJsonDs = spark.read.json(channelMetaDatJson)
         .withColumn("_id", lit(channelFileName))
         .withColumn("FileInfo", lit(fileInfo))
@@ -138,15 +149,17 @@ class DataIngestion(MONGO_URI: String){
         .join(eventDataSet, $"Time" === $"EventTime", "left")
         .select($"Time", $"Signal", $"EventCode")
 
-      channelWithEventDs.
-        write
-        .mode(SaveMode.Overwrite)
-        .parquet(channelFileHdfsWritePath)
+//      channelWithEventDs.
+//        write
+//        .mode(SaveMode.Overwrite)
+//        .parquet(channelFileHdfsWritePath)
 
       channelTimeCounter = channelData.last.Time
-      channelDs
+
+      channelWithEventDs
         .withColumn("channelName", lit(fileSystem.getLeafFileName(channel)))
         .withColumn("FileInfo", lit(fileInfo))
+
     }).reduce((df1, df2) => df1.unionByName(df2))
 
   }

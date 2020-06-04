@@ -1,5 +1,7 @@
 package com.ipm.nslab.bdns
 
+import java.util.concurrent.TimeUnit
+
 import com.ipm.nslab.bdns.commons.{MongoConnector, SparkConfig}
 import com.ipm.nslab.bdns.spark.DataIngestion
 import com.typesafe.scalalogging.Logger
@@ -47,14 +49,20 @@ object RecordingDataLoader extends DataIngestion(MONGO_URI = ""){
       val eventData = dataIngestion.writeAndCreateEvent(spark, ex, pathProperties)
       val channelData = dataIngestion.writeAndCreateChannel(spark, eventData.persist(), ex, pathProperties).persist()
 
-      channelData.write.mode(SaveMode.Overwrite)
+      channelData
+        .write
+        .mode(SaveMode.Overwrite)
+        .partitionBy("channelName")
         .saveAsTable(HIVE_DB + "." + fileSystem.getLeafFileName(ex).replace("-", "_"))
+
       dataIngestion.writeExperimentMetaData(spark, ex)
 
       eventData.unpersist()
       channelData.unpersist()
     })
 
+      logger.info("Finished Writing Data")
+      TimeUnit.SECONDS.sleep(5)
       spark.close()
 
   } else {
