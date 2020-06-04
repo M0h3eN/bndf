@@ -88,7 +88,7 @@ class CellStructure extends CharArrayStructure with MatrixStructure {
 
   }
 
-  def getCellValue(cellField: Cell, parentName: String, field: String): Option[String] ={
+  def getCellValue(cellField: Cell, parentName: String, field: String): Option[Array[String]] ={
 
     val childDimension = cellField.getDimensions.sum
 

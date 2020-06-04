@@ -145,7 +145,7 @@ class StructStructure extends CellStructure {
   }
 
 
-  def getStructValue(structMat: Struct, parentName: String, field: String): Option[String] ={
+  def getStructValue(structMat: Struct, parentName: String, field: String): Option[Array[String]] ={
 
     val fieldNames = structMat.getFieldNames.asScala.toArray
     val structDimension = structMat.getDimensions.sum
@@ -154,25 +154,19 @@ class StructStructure extends CellStructure {
 
       val fiealdClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
       val fiealdInfo: Array[(String, String)] = fieldNames.zip(fiealdClassNames)
-      val fieldsInfoFiltered = fiealdInfo.filter(_._1.equalsIgnoreCase(field))
-
-      logger.info(s"Fileds: ${fiealdInfo.foreach(x => println(s"${x._1} --> ${x._2}"))}")
-      logger.info(s"FiledsFiltered: ${fieldsInfoFiltered.foreach(x => println(s"${x._1} --> ${x._2}"))}")
-
-      if(fieldsInfoFiltered.isEmpty){
-        logger.info("Field is is not in the set")
+//      val fieldsInfoFiltered = fiealdInfo.filter(_._1.equalsIgnoreCase(field))
 
         val structFieldsValue = fiealdInfo.map(x => {
-          logger.info(s"Working on ${x} field info")
 
           val fn = x._1
           val cl = x._2
 
-          val mapFields: Option[String] = cl match {
+          val mapFields = cl match {
 
             case "us.hebi.matlab.mat.format.MatStruct" => getStructValue(structMat.getStruct(fn), fn, field)
             case "us.hebi.matlab.mat.format.MatCell" => getCellValue(structMat.getCell(fn), fn, field)
             case "us.hebi.matlab.mat.format.MatMatrix" => getMatrixValue(structMat.getMatrix(fn), fn, field)
+            case "us.hebi.matlab.mat.format.MatChar" => getCharValue(structMat.getChar(fn), fn, field)
             case _ => None
 
           }
@@ -181,31 +175,14 @@ class StructStructure extends CellStructure {
 
         })
 
-        val leafValue = structFieldsValue.flatten
+        val leafValue = structFieldsValue.flatten.flatten
 
         if (leafValue.isEmpty){
           None
         } else {
-          Some(leafValue.apply(0))
+          Some(leafValue)
         }
 
-      } else {
-
-        val fn = fieldsInfoFiltered.apply(0)._1
-        val cl = fieldsInfoFiltered.apply(0)._2
-
-        val mapFields: Option[String] = cl match {
-
-          case "us.hebi.matlab.mat.format.MatChar" => getCharValue(structMat.getChar(fn), fn, field)
-          case "us.hebi.matlab.mat.format.MatCell" => getCellValue(structMat.getCell(fn), fn, field)
-          case "us.hebi.matlab.mat.format.MatMatrix" => getMatrixValue(structMat.getMatrix(fn), fn, field)
-          case _ => None
-
-        }
-
-         mapFields
-
-      }
 
     } else {
       None

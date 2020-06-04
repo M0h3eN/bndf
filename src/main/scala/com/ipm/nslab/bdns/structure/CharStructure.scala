@@ -16,10 +16,12 @@ class CharStructure {
     }
   }
 
-  def getCharValue(charField: Char, parentName: String, field: String): Option[String] = {
+  def getCharValue(charField: Char, parentName: String, field: String): Option[Array[String]] = {
+
+    val charValue = Array(charField.toString)
 
     if(parentName.equalsIgnoreCase(field)){
-       Some(charField.toString)
+       Some(charValue)
     } else{
       None
     }

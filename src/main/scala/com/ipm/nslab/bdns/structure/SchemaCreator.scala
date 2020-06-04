@@ -34,7 +34,7 @@ class SchemaCreator {
     sortedStructMap
   }
 
-  def getValue(entries: Iterable[Entry], matFile: Mat5File, field: String): String = {
+  def getValue(entries: Iterable[Entry], matFile: Mat5File, field: String): Array[String] = {
 
     val entryInfo = entries.map(x => (x.getName, x.getValue.getType.toString)).filter(_._1.equalsIgnoreCase(field)).toArray
 
@@ -45,7 +45,7 @@ class SchemaCreator {
         val parentFieldsName = it.getName
         val parentFieldsType = it.getValue.getType.toString
 
-        val value = parentFieldsType match {
+        val value: Option[Array[String]] = parentFieldsType match {
           case "struct" => structStructure.getStructValue(matFile.getStruct(parentFieldsName), parentFieldsName, field)
           case _ => None
         }
@@ -54,12 +54,12 @@ class SchemaCreator {
 
       })
 
-      val leafValue = nestedMetaDataMapIterator.toArray.flatten
+      val leafValue = nestedMetaDataMapIterator.toArray.flatten.flatten
 
       if (leafValue.isEmpty){
-        ""
+        Array("")
       } else {
-        leafValue.apply(0)
+        leafValue
       }
 
     } else {

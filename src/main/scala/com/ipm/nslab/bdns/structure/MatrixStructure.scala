@@ -91,7 +91,7 @@ trait MatrixStructure extends CharStructure {
 
   }
 
-  def getMatrixValue(matrixField: Matrix, parentName: String, field: String): Option[String] = {
+  def getMatrixValue(matrixField: Matrix, parentName: String, field: String): Option[Array[String]] = {
 
     val childDimension = matrixField.getDimensions.sum
     val childColumn = matrixField.getNumCols
@@ -103,16 +103,12 @@ trait MatrixStructure extends CharStructure {
         if (childDimension <= 2) {
 
           val leafValue = matrixField.getDouble(0).toString
-          Some(leafValue)
+          Some(Array(leafValue))
 
         } else {
           if (childColumn.equals(1) && childRow < 100) {
 
-            val leafValue = (0 until childRow).map(r => matrixField.getDouble(r)).toArray
-              .map(x => x.toString.concat(", "))
-              .foldLeft("[")((x, y) => x + y)
-              .foldRight("]")((x, y) => x + y)
-              .replace(", ]", "]")
+            val leafValue = (0 until childRow).map(r => matrixField.getDouble(r).toString).toArray
 
             Some(leafValue)
 
