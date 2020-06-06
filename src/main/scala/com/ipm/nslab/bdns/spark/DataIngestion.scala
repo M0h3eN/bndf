@@ -104,6 +104,8 @@ class DataIngestion(MONGO_URI: String){
 
     if(pathProperties.channelFileNames.isEmpty) logger.error("", throw new Exception("Channel file not found"))
 
+    val numPattern = "\\d+".r
+    var channelMainCounter = 0
     var channelTimeCounter: Long = 0
 
     val channelFullPath = pathProperties.channelFileNames.map(names => s"$rootDir/$names.mat")
