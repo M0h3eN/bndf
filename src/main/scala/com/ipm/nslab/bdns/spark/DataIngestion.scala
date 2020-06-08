@@ -98,19 +98,19 @@ class DataIngestion(MONGO_URI: String){
 
   }
 
-  def writeAndCreateChannel(spark: SparkSession, eventDataSet: Dataset[Row], rootDir: String, pathProperties: PathPropertiesEvaluator): Dataset[Row]={
+  def writeAndCreateChannel(spark: SparkSession, eventDataSet: Dataset[Row], rootDir: String, pathProperties: PathPropertiesEvaluator): Unit={
     import spark.implicits._
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)
 
     if(pathProperties.channelFileNames.isEmpty) logger.error("", throw new Exception("Channel file not found"))
 
     val numPattern = "\\d+".r
-    var channelMainCounter = 0
+    var channelMainCounter: Int = 0
     var channelTimeCounter: Long = 0
 
     val channelFullPath = pathProperties.channelFileNames.map(names => s"$rootDir/$names.mat")
 
-    channelFullPath.map(channel => {
+    channelFullPath.foreach(channel => {
 
       val channelMatFile = readFromFile(channel)
       val channelEntry = channelMatFile.getEntries.asScala
@@ -123,11 +123,7 @@ class DataIngestion(MONGO_URI: String){
       val fileInfo = schemaCreator.getValue(channelEntry, channelMatFile, "long_name")
         .filterNot(_.equalsIgnoreCase("Root"))
         .reduce((x, y) => {
-          if(x.length > y.length) {
-            x.diff(y)
-          } else {
-            y.diff(x)
-          }
+          if(x.length > y.length) x.diff(y) else y.diff(x)
         })
         .replace("/", "")
         .replace("'", "")
@@ -150,19 +146,17 @@ class DataIngestion(MONGO_URI: String){
       val channelWithEventDs = channelDs
         .join(eventDataSet, $"Time" === $"EventTime", "left")
         .select($"Time", $"Signal", $"EventCode")
-
-//      channelWithEventDs.
-//        write
-//        .mode(SaveMode.Overwrite)
-//        .parquet(channelFileHdfsWritePath)
-
-      channelTimeCounter = channelData.last.Time
-
-      channelWithEventDs
-        .withColumn("channelName", lit(fileSystem.getLeafFileName(channel)))
         .withColumn("FileInfo", lit(fileInfo))
 
-    }).reduce((df1, df2) => df1.unionByName(df2))
+      channelWithEventDs.
+        write
+        .mode(SaveMode.Overwrite)
+        .parquet(channelFileHdfsWritePath)
+
+      channelTimeCounter = if(numPattern.findFirstIn(channelFileName).get.toInt == channelMainCounter) channelData.last.Time else 0
+      channelMainCounter = numPattern.findFirstIn(channelFileName).get.toInt
+
+    })
 
   }
 }

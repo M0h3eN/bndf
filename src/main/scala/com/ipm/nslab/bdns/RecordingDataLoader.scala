@@ -47,18 +47,11 @@ object RecordingDataLoader extends DataIngestion(MONGO_URI = ""){
       val pathProperties = fileSystem.getPathProperties(ex, RawFileFormat)
 
       val eventData = dataIngestion.writeAndCreateEvent(spark, ex, pathProperties)
-      val channelData = dataIngestion.writeAndCreateChannel(spark, eventData.persist(), ex, pathProperties).persist()
-
-      channelData
-        .write
-        .mode(SaveMode.Overwrite)
-        .partitionBy("channelName")
-        .saveAsTable(HIVE_DB + "." + fileSystem.getLeafFileName(ex).replace("-", "_"))
+      dataIngestion.writeAndCreateChannel(spark, eventData.persist(), ex, pathProperties)
 
       dataIngestion.writeExperimentMetaData(spark, ex)
 
       eventData.unpersist()
-      channelData.unpersist()
     })
 
       logger.info("Finished Writing Data")
