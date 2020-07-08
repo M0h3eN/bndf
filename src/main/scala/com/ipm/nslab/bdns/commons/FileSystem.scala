@@ -2,7 +2,7 @@ package com.ipm.nslab.bdns.commons
 
 import java.io.File
 
-import com.ipm.nslab.bdns.evaluator.{PathPropertiesEvaluator, RootPathPropertiesEvaluator}
+import com.ipm.nslab.bdns.extendedTypes.{PathPropertiesEvaluator, RootPathPropertiesEvaluator}
 
 class FileSystem {
 

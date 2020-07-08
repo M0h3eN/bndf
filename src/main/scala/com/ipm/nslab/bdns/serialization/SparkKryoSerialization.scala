@@ -1,9 +1,11 @@
 package com.ipm.nslab.bdns.serialization
 
 import com.esotericsoftware.kryo.Kryo
-import com.ipm.nslab.bdns.commons.{FileSystem, MongoConnector}
-import com.ipm.nslab.bdns.evaluator.{ExperimentMetaDataEvaluator, PathPropertiesEvaluator, RootPathPropertiesEvaluator}
+import com.ipm.nslab.bdns.commons.{FileSystem, MongoConnector, SparkReader}
+import com.ipm.nslab.bdns.extendedTypes.{BICValues, ChannelMeta, ExperimentMetaDataEvaluator, Median, PathPropertiesEvaluator, RootPathPropertiesEvaluator}
 import com.ipm.nslab.bdns.spark.DataIngestion
+import com.ipm.nslab.bdns.spark.analysis.{GoodnessOfFit, Sorting}
+import com.ipm.nslab.bdns.spark.commons.Transformers
 import com.ipm.nslab.bdns.structure.{CellStructure, CharArrayStructure, CharStructure, DataStructure, EventStructure, MatrixStructure, SchemaCreator, StructStructure}
 import org.apache.log4j.Logger
 import org.apache.spark.serializer.KryoRegistrator
@@ -56,12 +58,19 @@ class SparkKryoSerialization extends KryoRegistrator {
     //com.ipm.nslab.bdns.commons
     kryo.register(classOf[FileSystem])
     kryo.register(classOf[MongoConnector])
-    //com.ipm.nslab.bdns.evaluator
+    kryo.register(classOf[SparkReader])
+    //com.ipm.nslab.bdns.extendedTypes
     kryo.register(classOf[ExperimentMetaDataEvaluator])
     kryo.register(classOf[PathPropertiesEvaluator])
     kryo.register(classOf[RootPathPropertiesEvaluator])
+    kryo.register(classOf[Median])
+    kryo.register(classOf[BICValues])
+    kryo.register(classOf[ChannelMeta])
     //com.ipm.nslab.bdns.spark
     kryo.register(classOf[DataIngestion])
+    kryo.register(classOf[GoodnessOfFit])
+    kryo.register(classOf[Sorting])
+    kryo.register(classOf[Transformers])
     //com.ipm.nslab.bdns.structure
     kryo.register(classOf[CellStructure])
     kryo.register(classOf[CharArrayStructure])

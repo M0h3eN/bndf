@@ -1,6 +1,6 @@
 package com.ipm.nslab.bdns.commons
 
-import com.ipm.nslab.bdns.evaluator.ExperimentMetaDataEvaluator
+import com.ipm.nslab.bdns.extendedTypes.ExperimentMetaDataEvaluator
 import com.mongodb.spark.MongoSpark
 import com.mongodb.spark.config.{ReadConfig, WriteConfig}
 import org.apache.spark.sql.{DataFrame, SparkSession}

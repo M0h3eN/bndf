@@ -5,7 +5,8 @@ import java.util.concurrent.TimeUnit
 import com.ipm.nslab.bdns.commons.{MongoConnector, SparkConfig}
 import com.ipm.nslab.bdns.spark.DataIngestion
 import com.typesafe.scalalogging.Logger
-import org.apache.spark.sql.SaveMode
+
+import scala.util.Try
 
 
   /**
@@ -16,20 +17,18 @@ object RecordingDataLoader extends DataIngestion(MONGO_URI = ""){
     override val logger: Logger = Logger(s"${this.getClass.getName}")
 
     val sparkConfig = new SparkConfig
-    val HIVE_DB = "rawDataDB"
 
   def main(args : Array[String]) {
 
     if(args.isEmpty) logger.error("", throw new Exception("Path must specified"))
 
     val dir = args.apply(0)
-    val MONGO_URI = args.apply(1)
+    val MONGO_URI_DEFAULT = "mongodb://root:ns123@mongos:27017/admin"
+    val MONGO_URI = Try(args.apply(1)).getOrElse(MONGO_URI_DEFAULT)
     val dataIngestion = new DataIngestion(MONGO_URI)
     val conf = sparkConfig.sparkInitialConf("Recording Data Loader", MONGO_URI, MONGO_DB_NAME, numberOfSqlPartition)
     val spark = sparkConfig.sparkSessionCreator(conf)
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)
-
-    if (!spark.catalog.databaseExists(HIVE_DB)) spark.sql(s"CREATE DATABASE $HIVE_DB")
 
     val experimentsRootDirectory = fileSystem.getListOfDirs(dir)
     if (experimentsRootDirectory.isEmpty) logger.error("", throw new Exception("Directory is empty"))

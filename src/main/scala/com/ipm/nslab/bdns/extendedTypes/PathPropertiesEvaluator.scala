@@ -1,4 +1,4 @@
-package com.ipm.nslab.bdns.evaluator
+package com.ipm.nslab.bdns.extendedTypes
 
 case class PathPropertiesEvaluator(pathLen: Int, parentPath: String,
                                    experimentName: String, channelFileNames: Array[String],

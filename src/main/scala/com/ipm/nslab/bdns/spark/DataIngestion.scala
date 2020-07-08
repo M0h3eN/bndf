@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.Logger
 import spray.json._
 import com.ipm.nslab.bdns.commons.M2eeJsonProtocol.MapJsonFormat
 import com.ipm.nslab.bdns.commons.{FileSystem, MongoConnector}
-import com.ipm.nslab.bdns.evaluator.PathPropertiesEvaluator
+import com.ipm.nslab.bdns.extendedTypes.PathPropertiesEvaluator
 import com.ipm.nslab.bdns.structure.SchemaCreator
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions.{lit, typedLit}
