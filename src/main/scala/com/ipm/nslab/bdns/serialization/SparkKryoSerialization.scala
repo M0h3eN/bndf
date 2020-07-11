@@ -1,7 +1,8 @@
 package com.ipm.nslab.bdns.serialization
 
 import com.esotericsoftware.kryo.Kryo
-import com.ipm.nslab.bdns.commons.{FileSystem, MongoConnector, SparkReader}
+import com.ipm.nslab.bdns.commons.io.{SparkReader, SparkWriter}
+import com.ipm.nslab.bdns.commons.{FileSystem, MongoConnector}
 import com.ipm.nslab.bdns.extendedTypes.{BICValues, ChannelMeta, ExperimentMetaDataEvaluator, Median, PathPropertiesEvaluator, RootPathPropertiesEvaluator}
 import com.ipm.nslab.bdns.spark.DataIngestion
 import com.ipm.nslab.bdns.spark.analysis.{GoodnessOfFit, Sorting}
@@ -59,6 +60,7 @@ class SparkKryoSerialization extends KryoRegistrator {
     kryo.register(classOf[FileSystem])
     kryo.register(classOf[MongoConnector])
     kryo.register(classOf[SparkReader])
+    kryo.register(classOf[SparkWriter])
     //com.ipm.nslab.bdns.extendedTypes
     kryo.register(classOf[ExperimentMetaDataEvaluator])
     kryo.register(classOf[PathPropertiesEvaluator])
