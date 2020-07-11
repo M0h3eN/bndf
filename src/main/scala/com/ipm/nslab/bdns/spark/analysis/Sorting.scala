@@ -1,6 +1,6 @@
 package com.ipm.nslab.bdns.spark.analysis
 
-import com.ipm.nslab.bdns.commons.SparkReader
+import com.ipm.nslab.bdns.commons.io.SparkReader
 import com.ipm.nslab.bdns.extendedTypes.{BICValues, ChannelMeta, Median}
 import com.ipm.nslab.bdns.spark.commons.Transformers
 import com.typesafe.scalalogging.Logger
@@ -86,7 +86,7 @@ class Sorting {
 
   def simpleSorting(spark: SparkSession, channelDataset: Dataset[Row], fileInfo: String) :Dataset[Row] ={
 
-    val mlTransformedDataset = getMlTransformedColumnDataset(spark, channelDataset, fileInfo)
+    val mlTransformedDataset = getMlTransformedColumnDataset(spark, channelDataset, fileInfo).persist()
 
     val pca = new PCA()
       .setInputCol("SpikeSignals")
@@ -116,18 +116,20 @@ class Sorting {
     val bicValues = (minK to maxK).map(k => BICValues(k, goodnessOfFit.BIC(model, k - 1 ))).toArray
     val optimalK = bicValues.sortBy(_.bic).apply(0).k
 
+    logger.info(s"Total number of $optimalK neurons detected by GMM sorter based on BIC of value " +
+      s"${bicValues.filter(_.k.equals(optimalK)).apply(0).bic}.")
+
     val sortedDataset = model.transform(mlTransformedDataset)
       .withColumn("vars", explode(col("SpikeInfo")))
-      .select(col("channelName"), col("FileInfo"), col("vars.Time"),
+      .select(col("FileInfo"), col("vars.Time"),
         col("vars.Signal"), col("vars.EventCode"),
-        col(s"prediction$optimalK").alias("ClusterID"))
-      .orderBy(col("ClusterId"), col("Time"))
+        col(s"prediction$optimalK").alias("Neuron"))
 
+    mlTransformedDataset.unpersist()
     sortedDataset
-
   }
 
-  def sorter(spark: SparkSession, metaDataset: Dataset[Row]): Dataset[Row] ={
+  def sorter(spark: SparkSession, metaDataset: Dataset[Row], experimentName: String): Dataset[Row] ={
     import spark.implicits._
 
     val spikeChannelsDataset = metaDataset.filter($"IS_EVENT".isNull && $"FileInfo".contains("Spike"))
@@ -138,7 +140,7 @@ class Sorting {
     if(sessions.length > 1){
 
       sessions.map(s => {
-        logger.info(s"Start Sorting $s session")
+        logger.info(s"Start Sorting $s spike trains")
 
         val channelInfoMap = spikeChannelsDataset.filter($"FileInfo" === s)
           .drop("FileInfo")
@@ -147,12 +149,14 @@ class Sorting {
 
         val channelDataset = channelInfoMap.map(channel => {
           sparkReader.parquetReader(spark, channel)
-        }).reduce((df1, df2) => df1.union(df2)).persist
+        }).reduce((df1, df2) => df1.union(df2))
 
-        simpleSorting(spark, channelDataset, s)
-        channelDataset.unpersist
+        val sortedData = simpleSorting(spark, channelDataset, s)
+        sortedData
 
       }).reduce((df1, df2) => df1.union(df2))
+        .withColumnRenamed("FileInfo", "RecordLocation")
+        .withColumn("SessionOrExperiment", lit(experimentName))
 
     } else {
       val session = sessions.apply(0)
@@ -165,10 +169,11 @@ class Sorting {
 
       val channelDataset = channelInfoMap.map(channel => {
         sparkReader.parquetReader(spark, channel)
-      }).reduce((df1, df2) => df1.union(df2)).persist
+      }).reduce((df1, df2) => df1.union(df2))
 
-      simpleSorting(spark, channelDataset, session)
-      channelDataset.unpersist
+      val sortedData = simpleSorting(spark, channelDataset, session)
+      sortedData.withColumnRenamed("FileInfo", "RecordLocation")
+        .withColumn("SessionOrExperiment", lit(experimentName))
 
     }
   }
