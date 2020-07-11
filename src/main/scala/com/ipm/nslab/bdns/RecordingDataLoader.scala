@@ -24,7 +24,7 @@ object RecordingDataLoader extends DataIngestion(MONGO_URI = ""){
 
     val dir = args.apply(0)
     val MONGO_URI_DEFAULT = "mongodb://root:ns123@mongos:27017/admin"
-    val MONGO_URI = Try(args.apply(1)).getOrElse(MONGO_URI_DEFAULT)
+    val MONGO_URI = Try(args.apply(1)) getOrElse(MONGO_URI_DEFAULT)
     val dataIngestion = new DataIngestion(MONGO_URI)
     val conf = sparkConfig.sparkInitialConf("Recording Data Loader", MONGO_URI, MONGO_DB_NAME, numberOfSqlPartition)
     val spark = sparkConfig.sparkSessionCreator(conf)
