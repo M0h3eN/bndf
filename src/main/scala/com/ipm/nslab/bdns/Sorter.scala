@@ -10,7 +10,7 @@ import org.apache.spark.sql.SaveMode
 
 import scala.util.Try
 
-object SimpleSorter {
+object Sorter {
 
   val logger: Logger = Logger(s"${this.getClass.getName}")
 
