@@ -6,12 +6,19 @@ import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
 class SparkReader {
 
-  def parquetReader(sparkSession: SparkSession, channelMeta: ChannelMeta): Dataset[Row] ={
+  def channelParquetReader(sparkSession: SparkSession, channelMeta: ChannelMeta): Dataset[Row] ={
 
     sparkSession
       .read
       .parquet(channelMeta.HdfsPath)
       .withColumn("channelName", lit(channelMeta.channelName))
+  }
+
+  def eventParquetReader(sparkSession: SparkSession, HdfsRootDir: String): Dataset[Row] ={
+
+    sparkSession
+      .read
+      .parquet(HdfsRootDir + "/*.parquet")
   }
 
 }

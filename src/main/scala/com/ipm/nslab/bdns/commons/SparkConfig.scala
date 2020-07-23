@@ -1,7 +1,7 @@
 package com.ipm.nslab.bdns.commons
 
 import org.apache.log4j.{Level, Logger}
-import org.apache.spark.SparkConf
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
 
 class SparkConfig {
@@ -39,5 +39,16 @@ class SparkConfig {
 
   }
 
+  def currentActiveExecutors(sc: SparkContext): Seq[String] = {
+    val allExecutors = sc.getExecutorMemoryStatus.keys
+    val driverHost: String = sc.getConf.get("spark.driver.host")
+    allExecutors.filter(! _.split(":")(0).equals(driverHost)).toList
+  }
+
+  def currentActiveExecutorsCount(sc: SparkContext): Int = {
+    val allExecutors = sc.getExecutorMemoryStatus.keys
+    val driverHost: String = sc.getConf.get("spark.driver.host")
+    allExecutors.filter(! _.split(":")(0).equals(driverHost)).toArray.length
+  }
 
 }

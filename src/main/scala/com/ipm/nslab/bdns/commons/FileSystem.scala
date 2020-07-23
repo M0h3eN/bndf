@@ -48,11 +48,15 @@ class FileSystem {
     val experimentName = fullPath.map(x => x.split("/").apply(pathLen-2)).head
     val channelFileNames = fullPath.map(x => x.split("/").apply(pathLen-1).split("\\.").apply(0))
       .filter(c => c.startsWith("channel"))
-      .sortBy(x => x.splitAt("channelik".length)._2.split("_").apply(0).toInt)
+      .sortBy(x => {
+        val mainCounter = x.splitAt("channelik".length)._2.split("_").apply(0).toInt
+        val subCounter = x.splitAt("channelik".length)._2.split("_").apply(1).toInt
+        (mainCounter, subCounter)
+      })
       .toArray
     val eventFileNames = fullPath.map(x => x.split("/").apply(pathLen-1).split("\\.").apply(0))
       .filter(c => c.startsWith("event"))
-      .sorted
+      .sortBy(x => x.splitAt("eventik".length)._2.split("_").apply(1).toInt)
       .toArray
 
     PathPropertiesEvaluator(pathLen, parentPath, experimentName, channelFileNames, eventFileNames)

@@ -3,7 +3,7 @@ package com.ipm.nslab.bdns
 import java.util.concurrent.TimeUnit
 
 import com.ipm.nslab.bdns.commons.io.SparkWriter
-import com.ipm.nslab.bdns.commons.{MongoConnector, SparkConfig}
+import com.ipm.nslab.bdns.commons.{Benchmark, MongoConnector, SparkConfig}
 import com.ipm.nslab.bdns.spark.analysis.Sorting
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.sql.SaveMode
@@ -34,14 +34,21 @@ object Sorter {
     val conf = sparkConfig.sparkInitialConf("Spike Sorter", MONGO_URI, MONGO_DB_NAME, numberOfSqlPartition)
     val spark = sparkConfig.sparkSessionCreator(conf)
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)
+    val benchmark = new Benchmark(spark, MONGO_URI, MONGO_DB_NAME)
 
     if (!spark.catalog.databaseExists(HIVE_DB)) spark.sql(s"CREATE DATABASE $HIVE_DB")
 
     val metaData = mongoConnector.Reader(ex)
+    var startTime = System.currentTimeMillis()
     val sortedDataset = sorting.sorter(spark, metaData, ex)
+    benchmark.WriteBenchmarkData(this.getClass.getName, ex,
+      "CompletionOfExperimentSorting", System.currentTimeMillis() - startTime)
 
+    startTime = System.currentTimeMillis()
     sparkWrite.writeHiveTable(sortedDataset, SaveMode.Overwrite, HIVE_DB, "SORTED",
       "RecordLocation")
+    benchmark.WriteBenchmarkData(this.getClass.getName, ex,
+      "CompletionOfWritingSortedData", System.currentTimeMillis() - startTime)
 
     logger.info("Finished Sorting Spike Trains")
     TimeUnit.SECONDS.sleep(5)

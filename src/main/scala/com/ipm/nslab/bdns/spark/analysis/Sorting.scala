@@ -148,7 +148,7 @@ class Sorting {
           .map(x => ChannelMeta(x.getAs("_id").toString, x.getAs("HDFS_PATH").toString))
 
         val channelDataset = channelInfoMap.map(channel => {
-          sparkReader.parquetReader(spark, channel)
+          sparkReader.channelParquetReader(spark, channel)
         }).reduce((df1, df2) => df1.union(df2))
 
         val sortedData = simpleSorting(spark, channelDataset, s)
@@ -168,7 +168,7 @@ class Sorting {
         .map(x => ChannelMeta(x.getAs("_id").toString, x.getAs("HDFS_PATH").toString))
 
       val channelDataset = channelInfoMap.map(channel => {
-        sparkReader.parquetReader(spark, channel)
+        sparkReader.channelParquetReader(spark, channel)
       }).reduce((df1, df2) => df1.union(df2))
 
       val sortedData = simpleSorting(spark, channelDataset, session)

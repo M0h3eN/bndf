@@ -2,7 +2,7 @@ package com.ipm.nslab.bdns
 
 import java.util.concurrent.TimeUnit
 
-import com.ipm.nslab.bdns.commons.{MongoConnector, SparkConfig}
+import com.ipm.nslab.bdns.commons.{Benchmark, MongoConnector, SparkConfig}
 import com.ipm.nslab.bdns.spark.DataIngestion
 import com.typesafe.scalalogging.Logger
 
@@ -29,6 +29,7 @@ object RecordingDataLoader extends DataIngestion(MONGO_URI = ""){
     val conf = sparkConfig.sparkInitialConf("Recording Data Loader", MONGO_URI, MONGO_DB_NAME, numberOfSqlPartition)
     val spark = sparkConfig.sparkSessionCreator(conf)
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)
+    val benchmark = new Benchmark(spark, MONGO_URI, MONGO_DB_NAME)
 
     val experimentsRootDirectory = fileSystem.getListOfDirs(dir)
     if (experimentsRootDirectory.isEmpty) logger.error("", throw new Exception("Directory is empty"))
@@ -42,6 +43,7 @@ object RecordingDataLoader extends DataIngestion(MONGO_URI = ""){
 
     writableExperiments.foreach(ex => {
 
+      val startTime: Long = System.currentTimeMillis()
       logger.info(s"Start writing data for ${fileSystem.getLeafFileName(ex)} experiment")
       val pathProperties = fileSystem.getPathProperties(ex, RawFileFormat)
 
@@ -49,6 +51,9 @@ object RecordingDataLoader extends DataIngestion(MONGO_URI = ""){
       dataIngestion.writeAndCreateChannel(spark, eventData.persist(), ex, pathProperties)
 
       dataIngestion.writeExperimentMetaData(spark, ex)
+
+      benchmark.WriteBenchmarkData(this.getClass.getName, ex,
+        "CompletionOfWritingExperiment", System.currentTimeMillis() - startTime)
 
       eventData.unpersist()
     })

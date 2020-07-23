@@ -4,6 +4,7 @@ import scala.collection.JavaConverters._
 import com.typesafe.scalalogging.Logger
 import spray.json._
 import com.ipm.nslab.bdns.commons.M2eeJsonProtocol.MapJsonFormat
+import com.ipm.nslab.bdns.commons.io.SparkReader
 import com.ipm.nslab.bdns.commons.{FileSystem, MongoConnector}
 import com.ipm.nslab.bdns.extendedTypes.PathPropertiesEvaluator
 import com.ipm.nslab.bdns.structure.SchemaCreator
@@ -20,6 +21,7 @@ class DataIngestion(MONGO_URI: String){
 
   val fileSystem = new FileSystem
   val schemaCreator = new SchemaCreator
+  val sparkReader = new SparkReader
 
   val RawFileFormat = "mat"
   val numberOfSqlPartition = 500
@@ -43,7 +45,7 @@ class DataIngestion(MONGO_URI: String){
 
     val eventFullPath = pathProperties.eventFileNames.map(names => s"$rootDir/$names.mat")
 
-    val eventDataSet: DataFrame = eventFullPath.map(ev => {
+    eventFullPath.foreach(ev => {
 
       val eventMatFile = readFromFile(ev)
       val eventEntry = eventMatFile.getEntries.asScala
@@ -85,10 +87,10 @@ class DataIngestion(MONGO_URI: String){
         .mode(SaveMode.Overwrite)
         .parquet(eventFileHdfsWritePath)
 
-      eventCompleteDs
+    })
 
-    }).reduce((ds1, ds2) => ds1.unionByName(ds2))
-
+    val eventFileHdfsWritePath = s"/${pathProperties.parentPath}/${pathProperties.experimentName}/events"
+    val eventDataSet = sparkReader.eventParquetReader(spark, eventFileHdfsWritePath)
     val eventHeadStart = eventDataSet.orderBy($"EventTime").select($"EventTime").first().getAs[Long](0)
     val FilteredEventDataSet = eventDataSet
       .withColumn("EventTime", $"EventTime" + eventHeadStart)
