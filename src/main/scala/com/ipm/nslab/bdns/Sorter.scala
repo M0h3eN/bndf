@@ -2,7 +2,7 @@ package com.ipm.nslab.bdns
 
 import java.util.concurrent.TimeUnit
 
-import com.ipm.nslab.bdns.commons.io.SparkWriter
+import com.ipm.nslab.bdns.commons.io.{HdfsOperator, SparkWriter}
 import com.ipm.nslab.bdns.commons.{Benchmark, MongoConnector, SparkConfig}
 import com.ipm.nslab.bdns.spark.analysis.Sorting
 import com.typesafe.scalalogging.Logger
@@ -16,7 +16,9 @@ object Sorter {
 
   val sparkConfig = new SparkConfig
   val sparkWrite = new SparkWriter
+  val hdfsOperator = new HdfsOperator
   val HIVE_DB = "sortedDataDB"
+  val SPARK_CHECKPOINT_DIR = "/spark/checkpoint_bdns"
 
   val MONGO_DB_NAME = "MetaDataDB"
   val MONGO_COLLECTION = "Experiments"
@@ -33,6 +35,8 @@ object Sorter {
     val sorting = new Sorting
     val conf = sparkConfig.sparkInitialConf("Spike Sorter", MONGO_URI, MONGO_DB_NAME, numberOfSqlPartition)
     val spark = sparkConfig.sparkSessionCreator(conf)
+    spark.sparkContext.setCheckpointDir(SPARK_CHECKPOINT_DIR)
+
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)
     val benchmark = new Benchmark(spark, MONGO_URI, MONGO_DB_NAME)
 
@@ -51,6 +55,7 @@ object Sorter {
       "CompletionOfWritingSortedData", System.currentTimeMillis() - startTime)
 
     logger.info("Finished Sorting Spike Trains")
+    hdfsOperator.deleteFileBasedOnDir(SPARK_CHECKPOINT_DIR)
     TimeUnit.SECONDS.sleep(5)
     spark.close()
 
