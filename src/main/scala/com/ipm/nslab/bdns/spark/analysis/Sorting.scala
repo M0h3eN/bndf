@@ -24,7 +24,7 @@ class Sorting {
 
     val med = ChannelDataset.filter($"fileInfo" === fileInfo)
                      .select(abs($"signal").alias("signal"))
-                     .stat.approxQuantile("signal", Array(0.5), 0.00001).apply(0)
+                     .stat.approxQuantile("signal", Array(0.5), 0.0001).apply(0)
 
     val medianDataset = Seq(Median(fileInfo, med)).toDF()
 
@@ -136,22 +136,26 @@ class Sorting {
       .select($"_id", $"HDFS_PATH", $"FileInfo")
 
     val sessions = spikeChannelsDataset.select($"FileInfo").dropDuplicates.collect.map(_.get(0).toString)
+    val sessionsList = sessions.map(x => x.concat(", "))
+      .foldLeft("[")((x, y) => x + y)
+      .foldRight("]")((x, y) => x + y)
+      .replace(", ]", "]")
 
     if(sessions.length > 1){
+      logger.info(s"Sessions List: $sessionsList")
 
       sessions.map(s => {
         logger.info(s"Start Sorting $s spike trains")
 
-        val channelInfoMap = spikeChannelsDataset.filter($"FileInfo" === s)
-          .drop("FileInfo")
-          .collect
-          .map(x => ChannelMeta(x.getAs("_id").toString, x.getAs("HDFS_PATH").toString))
+        val channesBaseDir = spikeChannelsDataset.filter($"FileInfo" === s)
+          .select("HDFS_PATH")
+          .collect()
+          .map(_.getAs[String](0))
+          .toSeq
 
-        val channelDataset = channelInfoMap.map(channel => {
-          sparkReader.channelParquetReader(spark, channel)
-        }).reduce((df1, df2) => df1.union(df2))
-
+        val channelDataset = sparkReader.channelParquetReader(spark, channesBaseDir)
         val sortedData = simpleSorting(spark, channelDataset, s)
+
         sortedData
 
       }).reduce((df1, df2) => df1.union(df2))
@@ -162,16 +166,15 @@ class Sorting {
       val session = sessions.apply(0)
       logger.info(s"Start Sorting $session session")
 
-      val channelInfoMap = spikeChannelsDataset.filter($"FileInfo" === session)
-        .drop("FileInfo")
-        .collect
-        .map(x => ChannelMeta(x.getAs("_id").toString, x.getAs("HDFS_PATH").toString))
+      val channesBaseDir = spikeChannelsDataset.filter($"FileInfo" === session)
+        .select("HDFS_PATH")
+        .collect()
+        .map(_.getAs[String](0))
+        .toSeq
 
-      val channelDataset = channelInfoMap.map(channel => {
-        sparkReader.channelParquetReader(spark, channel)
-      }).reduce((df1, df2) => df1.union(df2))
-
+      val channelDataset = sparkReader.channelParquetReader(spark, channesBaseDir)
       val sortedData = simpleSorting(spark, channelDataset, session)
+
       sortedData.withColumnRenamed("FileInfo", "RecordLocation")
         .withColumn("SessionOrExperiment", lit(experimentName))
 
