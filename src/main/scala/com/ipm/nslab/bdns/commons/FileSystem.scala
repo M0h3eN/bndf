@@ -2,7 +2,7 @@ package com.ipm.nslab.bdns.commons
 
 import java.io.File
 
-import com.ipm.nslab.bdns.extendedTypes.{PathPropertiesEvaluator, RootPathPropertiesEvaluator}
+import com.ipm.nslab.bdns.extendedTypes.{ChannelCounters, PathPropertiesEvaluator, RootPathPropertiesEvaluator}
 
 class FileSystem {
 
@@ -26,6 +26,15 @@ class FileSystem {
 
     val pathLen = rootDir.split("/").length
     rootDir.split("/").apply(pathLen-1).split("\\.").apply(0)
+  }
+
+  def getChannelCounterInfo(channel: String): ChannelCounters ={
+
+    val pathLen = channel.split("/").length
+    val mainCounter = channel.split("/").apply(pathLen - 1).split("\\.").apply(0).splitAt("channelik".length)._2.split("_").apply(0).toInt
+    val subCounter = channel.split("/").apply(pathLen - 1).split("\\.").apply(0).splitAt("channelik".length)._2.split("_").apply(1).toInt
+
+    ChannelCounters(mainCounter, subCounter)
   }
 
   def getRootPathProperties(rootDir: String): RootPathPropertiesEvaluator ={
