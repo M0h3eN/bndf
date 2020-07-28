@@ -154,7 +154,6 @@ class StructStructure extends CellStructure {
 
       val fiealdClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
       val fiealdInfo: Array[(String, String)] = fieldNames.zip(fiealdClassNames)
-//      val fieldsInfoFiltered = fiealdInfo.filter(_._1.equalsIgnoreCase(field))
 
         val structFieldsValue = fiealdInfo.map(x => {
 

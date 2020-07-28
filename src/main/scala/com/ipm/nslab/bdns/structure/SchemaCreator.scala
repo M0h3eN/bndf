@@ -9,7 +9,6 @@ import scala.collection.immutable.ListMap
 
 class SchemaCreator {
 
-  val logger: Logger = Logger(s"${this.getClass.getName}")
   val structStructure = new StructStructure
 
   def metaDataSchemaCreator(entries: Iterable[Entry], matFile: Mat5File): Map[String, Any] = {
@@ -96,7 +95,6 @@ class SchemaCreator {
 
     val rawData = nestedMetaDataMapIterator.toArray.flatten
     if(rawData.length !=0) rawData.flatten else {
-      logger.warn("File does not have signal data")
       Array(DataStructure(0, -1))
     }
   }
@@ -119,7 +117,6 @@ class SchemaCreator {
 
     val rawData = nestedMetaDataMapIterator.toArray.flatten
     if(rawData.length !=0) rawData.flatten else {
-      logger.warn("File does not have signal data")
       Array(EventStructure(0, "NULL", -1))
     }
 

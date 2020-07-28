@@ -46,7 +46,6 @@ trait MatrixStructure extends CharStructure {
     if (matrixField.getNumElements != 0){
       if (childColumn.equals(1) && childDimension > 2 && childRow > 100){
 
-        logger.info(s"$parentName --> Signal data found, writing: $matrixField")
         val rawData = (0 until childRow).map(row => DataStructure(matrixField.getDouble(row), row + timeIndex + 1)).toArray
         Some(rawData)
 
@@ -69,8 +68,6 @@ trait MatrixStructure extends CharStructure {
 
     if (matrixField.getNumElements != 0){
     if (childColumn.equals(1) && childDimension > 2 && childRow > 100 && parentName.equals("Data")){
-
-    logger.info(s"$parentName --> Signal data found, writing: $matrixField")
 
     val rawData = (0 until childRow).map(row => Seq(matrixField.getLong(row), row)).toArray
     val rawDataFlat = (0 until childRow).map(row => matrixField.getLong(row)).toArray
