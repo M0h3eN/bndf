@@ -6,11 +6,13 @@ import spray.json._
 import com.ipm.nslab.bdns.commons.M2eeJsonProtocol.MapJsonFormat
 import com.ipm.nslab.bdns.commons.io.SparkReader
 import com.ipm.nslab.bdns.commons.{FileSystem, MongoConnector}
-import com.ipm.nslab.bdns.extendedTypes.PathPropertiesEvaluator
+import com.ipm.nslab.bdns.extendedTypes.{ChannelCounterIterator, PathPropertiesEvaluator}
 import com.ipm.nslab.bdns.structure.SchemaCreator
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions.{lit, typedLit}
 import us.hebi.matlab.mat.format.Mat5.readFromFile
+
+import scala.util.Try
 
 class DataIngestion(MONGO_URI: String){
 
@@ -106,23 +108,19 @@ class DataIngestion(MONGO_URI: String){
 
     if(pathProperties.channelFileNames.isEmpty) logger.error("", throw new Exception("Channel file not found"))
 
-    val numPattern = "\\d+".r
-    var channelMainCounter: Int = 0
     var channelTimeCounter: Long = 0
 
     val channelFullPath = pathProperties.channelFileNames.map(names => s"$rootDir/$names.mat")
+    val sortedIterator: Array[ChannelCounterIterator] = channelFullPath.par.map(channel => {
 
-    channelFullPath.foreach(channel => {
+      val mainCounter = fileSystem.getChannelCounterInfo(channel).mainCounter
+      val subCounter = fileSystem.getChannelCounterInfo(channel).subCounter
 
       val channelMatFile = readFromFile(channel)
       val channelEntry = channelMatFile.getEntries.asScala
       val channelFileName = fileSystem.getLeafFileName(channel)
-      val channelFileHdfsWritePath = s"/${pathProperties.parentPath}/${pathProperties.experimentName}" +
-        s"/channels/$channelFileName.parquet"
 
-      logger.info(s"Start Writing Channel MetaData for $channelFileName")
-
-      val fileInfo = schemaCreator.getValue(channelEntry, channelMatFile, "long_name")
+      val channelFileInfo = schemaCreator.getValue(channelEntry, channelMatFile, "long_name")
         .filterNot(_.equalsIgnoreCase("Root"))
         .reduce((x, y) => {
           if(x.length > y.length) x.diff(y) else y.diff(x)
@@ -131,12 +129,32 @@ class DataIngestion(MONGO_URI: String){
         .replace("'", "")
         .asInstanceOf[String]
 
+      ChannelCounterIterator(channel, channelFileName, channelFileInfo, mainCounter, subCounter)
+
+    }).toArray.sortBy(cci => {
+      (cci.channelFileInfo, cci.mainCounter, cci.subCounter)
+    })
+
+    sortedIterator.indices.foreach(ci => {
+
+      val channelMatFile = readFromFile(sortedIterator.apply(ci).fullPath)
+      val channelEntry = channelMatFile.getEntries.asScala
+      val channelFileName = fileSystem.getLeafFileName(sortedIterator.apply(ci).channelFileName)
+      val nextChannelFileName = Try(fileSystem.getLeafFileName(sortedIterator.apply(ci + 1).channelFileName))
+        .getOrElse(fileSystem.getLeafFileName(sortedIterator.apply(0).channelFileName))
+      val fileInfo = sortedIterator.apply(ci).channelFileInfo
+      val nextFileInfo = Try(sortedIterator.apply(ci + 1).channelFileInfo).getOrElse(sortedIterator.apply(0).channelFileInfo)
+      val currentChannelFileHdfsWritePath = s"/${pathProperties.parentPath}/${pathProperties.experimentName}" +
+        s"/channels/$channelFileName.parquet"
+
+      logger.info(s"Start Writing Channel MetaData for $channelFileName")
+
       val channelMetaData = schemaCreator.metaDataSchemaCreator(channelEntry, channelMatFile)
       val channelMetaDatJson = spark.createDataset(Seq(channelMetaData.toJson.toString().replace("'", "")))
       val channelMetaDatJsonDs = spark.read.json(channelMetaDatJson)
         .withColumn("_id", lit(channelFileName))
         .withColumn("FileInfo", lit(fileInfo))
-        .withColumn("HDFS_PATH", lit(channelFileHdfsWritePath))
+        .withColumn("HDFS_PATH", lit(currentChannelFileHdfsWritePath))
 
       mongoConnector.Writer(pathProperties.experimentName, channelMetaDatJsonDs)
       logger.info(s"Start Writing Event Data for $channelFileName")
@@ -153,10 +171,13 @@ class DataIngestion(MONGO_URI: String){
       channelWithEventDs.
         write
         .mode(SaveMode.Overwrite)
-        .parquet(channelFileHdfsWritePath)
+        .parquet(currentChannelFileHdfsWritePath)
 
-      channelTimeCounter = if(numPattern.findFirstIn(channelFileName).get.toInt == channelMainCounter) channelData.last.Time else 0
-      channelMainCounter = numPattern.findFirstIn(channelFileName).get.toInt
+      val current = channelFileName.split("channelik").apply(1).split("_").apply(0).toInt
+      val next = nextChannelFileName.split("channelik").apply(1).split("_").apply(0).toInt
+      val cond = current.equals(next) || fileInfo.equals(nextFileInfo)
+
+      channelTimeCounter = if(cond) channelData.last.Time else 0
 
     })
 
