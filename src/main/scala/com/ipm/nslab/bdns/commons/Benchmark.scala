@@ -15,7 +15,7 @@ class Benchmark(override val spark: SparkSession, override val uri: String,
     val numberOfNodes = sparkConfig.currentActiveExecutorsCount(spark.sparkContext)
     val timeSecond = timeMil/1000D
     val timeMinutes = timeMil/(1000*60D)
-    val _id = s"${moduleName}_${experimentName}_${numberOfNodes}"
+    val _id = s"${moduleName}_${experimentName}_${numberOfNodes}_${stage}".hashCode
 
     val benchmarkData = BenchmarkDataSet(_id, moduleName, experimentName,
       numberOfNodes, stage, timeMinutes, timeSecond)
