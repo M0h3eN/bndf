@@ -12,6 +12,7 @@ class SparkConfig {
       .setAppName(appName)
       .set("spark.sql.shuffle.partitions", s"$sqlShufflePar")
       .set("spark.default.parallelism", "500")
+      .set("spark.sql.broadcastTimeout", "900")
       .set("spark.kryo.registrator", "com.ipm.nslab.bdns.serialization.SparkKryoSerialization")
       .set("spark.kryo.referenceTracking", "true")
       .set("spark.ui.showConsoleProgress", "false")
