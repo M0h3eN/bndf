@@ -1,14 +1,15 @@
 package com.ipm.nslab.bdns.spark.analysis
 
 import com.ipm.nslab.bdns.commons.io.SparkReader
-import com.ipm.nslab.bdns.extendedTypes.{BICValues, ChannelMeta, Median}
+import com.ipm.nslab.bdns.extendedTypes.{BICValues, Median}
 import com.ipm.nslab.bdns.spark.commons.Transformers
 import com.typesafe.scalalogging.Logger
 import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.ml.clustering.GaussianMixture
 import org.apache.spark.ml.feature.PCA
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import org.apache.spark.sql.functions.{abs, col, collect_list, count, explode, lag, lit, mean, monotonically_increasing_id, sequence, sort_array, sqrt, stddev, struct, when}
+import org.apache.spark.sql.functions.{abs, col, collect_list, count, explode,
+  lag, lit, mean, monotonically_increasing_id, sequence, sort_array, sqrt, stddev, struct, when, size}
 import org.apache.spark.sql.expressions.Window
 
 class Sorting {
@@ -39,7 +40,8 @@ class Sorting {
     summaryDataset
   }
 
-  def getWindowedSpikeDataset(spark: SparkSession, channelDataset: Dataset[Row], fileInfo: String): Dataset[Row] ={
+  def getWindowedSpikeDataset(spark: SparkSession, channelDataset: Dataset[Row],
+                              fileInfo: String, n1: Int, n2: Int): Dataset[Row] ={
     import spark.implicits._
 
     val overFileInfo = Window.partitionBy("FileInfo").orderBy("Time")
@@ -59,8 +61,8 @@ class Sorting {
       .withColumn("LAG", when($"LAG".isNull, 0).otherwise($"LAG"))
       .withColumn("diff", $"Time" - $"LAG")
       .filter($"diff" =!= 1)
-      .withColumn("lwb", $"Time" - 30)
-      .withColumn("uwb", $"Time" + 50)
+      .withColumn("lwb", $"Time" - n1)
+      .withColumn("uwb", $"Time" + n2)
       .withColumn("SpikeWindow", sequence($"lwb", $"uwb"))
       .withColumn("SparkSetNumber", monotonically_increasing_id)
       .select("FileInfo", "SpikeWindow", "SparkSetNumber")
@@ -71,13 +73,16 @@ class Sorting {
 
   }
 
-  def getMlTransformedColumnDataset(spark: SparkSession, channelDataset: Dataset[Row], fileInfo: String): Dataset[Row] ={
+  def getMlTransformedColumnDataset(spark: SparkSession, channelDataset: Dataset[Row],
+                                    fileInfo: String, n1: Int, n2: Int): Dataset[Row] ={
     import spark.implicits._
 
-    val windowedSpikeDataset = getWindowedSpikeDataset(spark, channelDataset, fileInfo)
-    val mlTransformedDataset = windowedSpikeDataset.join(channelDataset, Seq("FileInfo", "Time"), "left")
+    val windowedSpikeDataset = getWindowedSpikeDataset(spark, channelDataset, fileInfo, n1, n2)
+    val mlTransformedDataset = windowedSpikeDataset
+      .join(channelDataset, Seq("FileInfo", "Time"), "left")
       .groupBy("channelName", "FileInfo", "SparkSetNumber")
       .agg(sort_array(collect_list(struct("Time", "Signal", "EventCode").alias("SpikeInfo"))).alias("SpikeInfo"))
+      .filter(size($"SpikeInfo") === n1 + n2 + 1)
       .withColumn("SpikeSignals", transformers.arrayToVectorUDF($"SpikeInfo.Signal"))
 
     mlTransformedDataset
@@ -86,7 +91,7 @@ class Sorting {
 
   def simpleSorting(spark: SparkSession, channelDataset: Dataset[Row], fileInfo: String) :Dataset[Row] ={
 
-    val mlTransformedDataset = getMlTransformedColumnDataset(spark, channelDataset, fileInfo).persist()
+    val mlTransformedDataset = getMlTransformedColumnDataset(spark, channelDataset, fileInfo, 30, 50).persist()
 
     val pca = new PCA()
       .setInputCol("SpikeSignals")

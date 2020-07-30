@@ -19,6 +19,7 @@ object Sorter {
   val hdfsOperator = new HdfsOperator
   val HIVE_DB = "sortedDataDB"
   val SPARK_CHECKPOINT_DIR = "/spark/checkpoint_bdns"
+  val MAIN_SORTED_DATA_DIR = "/sorted-data"
 
   val MONGO_DB_NAME = "MetaDataDB"
   val MONGO_COLLECTION = "Experiments"
@@ -49,8 +50,7 @@ object Sorter {
       "CompletionOfExperimentSorting", System.currentTimeMillis() - startTime)
 
     startTime = System.currentTimeMillis()
-    sparkWrite.writeHiveTable(sortedDataset, SaveMode.Overwrite, HIVE_DB, "SORTED",
-      "RecordLocation")
+    sparkWrite.writeParquetInHdfs(sortedDataset, SaveMode.Overwrite, MAIN_SORTED_DATA_DIR + "/" + ex + ".parquet")
     benchmark.WriteBenchmarkData(this.getClass.getName, ex,
       "CompletionOfWritingSortedData", System.currentTimeMillis() - startTime)
 

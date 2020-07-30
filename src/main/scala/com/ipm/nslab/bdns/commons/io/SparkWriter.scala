@@ -23,4 +23,24 @@ class SparkWriter {
     }
 
   }
+
+  def writeParquetInHdfs(dataset: Dataset[Row], saveMode: SaveMode, writePath: String,
+                         partitionColumn: String*): Unit ={
+
+
+    if(partitionColumn.equals(null)){
+
+      dataset.write
+        .mode(saveMode)
+        .parquet(writePath)
+
+    } else {
+
+      dataset.write
+        .mode(saveMode)
+        .partitionBy(partitionColumn: _*)
+        .parquet(writePath)
+    }
+
+  }
 }

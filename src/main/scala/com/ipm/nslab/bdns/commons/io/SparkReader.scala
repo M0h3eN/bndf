@@ -1,7 +1,7 @@
 package com.ipm.nslab.bdns.commons.io
 
 import com.ipm.nslab.bdns.extendedTypes.ChannelMeta
-import org.apache.spark.sql.functions.{input_file_name, element_at, size, split}
+import org.apache.spark.sql.functions.{input_file_name, element_at, size, split, col}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
 class SparkReader {
