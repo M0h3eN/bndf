@@ -8,8 +8,8 @@ import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.ml.clustering.GaussianMixture
 import org.apache.spark.ml.feature.PCA
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import org.apache.spark.sql.functions.{abs, col, collect_list, count, explode,
-  lag, lit, mean, monotonically_increasing_id, sequence, sort_array, sqrt, stddev, struct, when, size}
+import org.apache.spark.sql.functions.{abs, col, collect_list, count, explode, lag, lit, mean,
+  monotonically_increasing_id, sequence, sort_array, sqrt, stddev, struct, when, size, broadcast}
 import org.apache.spark.sql.expressions.Window
 
 class Sorting {
@@ -20,24 +20,19 @@ class Sorting {
 
   val logger: Logger = Logger(s"${this.getClass.getName}")
 
-  def getSignalSummaryDataset(spark: SparkSession, ChannelDataset: Dataset[Row], fileInfo: String): Dataset[Row] ={
+  def getThresholdDataset(spark: SparkSession, ChannelDataset: Dataset[Row], fileInfo: String): Dataset[Row] ={
     import spark.implicits._
 
     val med = ChannelDataset.filter($"fileInfo" === fileInfo)
                      .select(abs($"signal").alias("signal"))
                      .stat.approxQuantile("signal", Array(0.5), 0.0001).apply(0)
 
-    val medianDataset = Seq(Median(fileInfo, med)).toDF()
+    val medianData = Median(fileInfo, med)
 
-    val summaryDataset = ChannelDataset
-      .groupBy($"FileInfo")
-      .agg(mean($"signal").alias("mean"), stddev($"signal").alias("se"), count($"signal").alias("n"))
-      .withColumn("LB", $"mean" - lit(2) * $"se"/sqrt($"n"))
-      .withColumn("UB", $"mean" + lit(2) * $"se"/sqrt($"n"))
-      .join(medianDataset, Seq("FileInfo"), "left")
-      .withColumn("threshold", lit(3) * $"median"/0.6745)
+    val thresholdDataset = ChannelDataset.filter($"fileInfo" === fileInfo)
+      .withColumn("threshold", lit(3 * medianData.median)/0.6745)
 
-    summaryDataset
+    thresholdDataset
   }
 
   def getWindowedSpikeDataset(spark: SparkSession, channelDataset: Dataset[Row],
@@ -51,10 +46,10 @@ class Sorting {
     // 1- signal > t
     // 1- (signal < -t) || (signal > t)
 
-    val summaryDataset = getSignalSummaryDataset(spark, channelDataset, fileInfo)
-    val thresholdedDataset = channelDataset.join(summaryDataset, Seq("FileInfo"), "left")
-    .withColumn("Spike", when($"signal" < -$"threshold", 1).otherwise(0))
-    .select($"FileInfo", $"Time", $"Signal", $"Spike")
+    val thresholdedDataset = getThresholdDataset(spark, channelDataset, fileInfo)
+      .withColumn("Spike", when($"signal" < -$"threshold", 1).otherwise(0))
+      .select($"FileInfo", $"Time", $"Signal", $"Spike")
+    
 
     val windowdSpikeDataset = thresholdedDataset.filter($"Spike" === 1)
       .select($"FileInfo", $"Signal", $"Spike", $"Time", lag($"Time", 1) over overFileInfo as "LAG")
@@ -77,10 +72,10 @@ class Sorting {
                                     fileInfo: String, n1: Int, n2: Int): Dataset[Row] ={
     import spark.implicits._
 
-    val windowedSpikeDataset = getWindowedSpikeDataset(spark, channelDataset, fileInfo, n1, n2)
+    val windowedSpikeDataset = broadcast(getWindowedSpikeDataset(spark, channelDataset, fileInfo, n1, n2))
     val mlTransformedDataset = windowedSpikeDataset
       .join(channelDataset, Seq("FileInfo", "Time"), "left")
-      .groupBy("channelName", "FileInfo", "SparkSetNumber")
+      .groupBy("FileInfo", "SparkSetNumber")
       .agg(sort_array(collect_list(struct("Time", "Signal", "EventCode").alias("SpikeInfo"))).alias("SpikeInfo"))
       .filter(size($"SpikeInfo") === n1 + n2 + 1)
       .withColumn("SpikeSignals", transformers.arrayToVectorUDF($"SpikeInfo.Signal"))
@@ -93,14 +88,15 @@ class Sorting {
 
     val mlTransformedDataset = getMlTransformedColumnDataset(spark, channelDataset, fileInfo, 30, 50).persist()
 
+    val K = 6
     val pca = new PCA()
       .setInputCol("SpikeSignals")
       .setOutputCol("pcaFeatureColumn")
-      .setK(6)
+      .setK(K)
       .asInstanceOf[PipelineStage]
 
     val minK = 2
-    val maxK = 6
+    val maxK = K - 1
 
     val gmmArray = (minK to maxK).map(k => {
 
@@ -158,13 +154,14 @@ class Sorting {
           .map(_.getAs[String](0))
           .toSeq
 
-        val channelDataset = sparkReader.channelParquetReader(spark, channesBaseDir)
+        val channelDataset = sparkReader.channelParquetReader(spark, channesBaseDir).persist()
         val sortedData = simpleSorting(spark, channelDataset, s)
+        channelDataset.unpersist()
 
         sortedData
 
       }).reduce((df1, df2) => df1.union(df2))
-        .withColumnRenamed("FileInfo", "RecordLocation")
+        .withColumnRenamed("FileInfo", "SignalInfo")
         .withColumn("SessionOrExperiment", lit(experimentName))
 
     } else {
@@ -177,10 +174,11 @@ class Sorting {
         .map(_.getAs[String](0))
         .toSeq
 
-      val channelDataset = sparkReader.channelParquetReader(spark, channesBaseDir)
+      val channelDataset = sparkReader.channelParquetReader(spark, channesBaseDir).persist()
       val sortedData = simpleSorting(spark, channelDataset, session)
+      channelDataset.unpersist()
 
-      sortedData.withColumnRenamed("FileInfo", "RecordLocation")
+      sortedData.withColumnRenamed("FileInfo", "SignalInfo")
         .withColumn("SessionOrExperiment", lit(experimentName))
 
     }
