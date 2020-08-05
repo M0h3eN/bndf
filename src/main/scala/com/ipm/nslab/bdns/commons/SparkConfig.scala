@@ -22,7 +22,7 @@ class SparkConfig {
       .set("spark.mongodb.output.database", mongoDb)
       .set("spark.mongodb.output.replaceDocument", "true")
       .set("spark.mongodb.output.ordered", "false")
-      .set("spark.hadoop.dfs.replication", "3")
+      .set("spark.hadoop.dfs.replication", "1")
       .set("spark.mongodb.output.collection", "")
 
   }
