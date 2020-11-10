@@ -54,16 +54,16 @@ class SparkKryoSerialization extends KryoRegistrator {
     registerByName(kryo, "org.apache.avro.Schema$LongSchema")
     registerByName(kryo, "org.apache.avro.generic.GenericData$Array")
 
-    //com.ipm.nslab.bdns
+    //com.ipm.nslab.bndf
 
-    //com.ipm.nslab.bdns.commons
+    //com.ipm.nslab.bndf.commons
     kryo.register(classOf[FileSystem])
     kryo.register(classOf[MongoConnector])
     kryo.register(classOf[SparkReader])
     kryo.register(classOf[SparkWriter])
     kryo.register(classOf[Benchmark])
     kryo.register(classOf[HdfsOperator])
-    //com.ipm.nslab.bdns.extendedTypes
+    //com.ipm.nslab.bndf.extendedTypes
     kryo.register(classOf[ExperimentMetaDataEvaluator])
     kryo.register(classOf[PathPropertiesEvaluator])
     kryo.register(classOf[RootPathPropertiesEvaluator])
@@ -73,12 +73,12 @@ class SparkKryoSerialization extends KryoRegistrator {
     kryo.register(classOf[BenchmarkDataSet])
     kryo.register(classOf[ChannelCounters])
     kryo.register(classOf[ChannelCounterIterator])
-    //com.ipm.nslab.bdns.spark
+    //com.ipm.nslab.bndf.spark
     kryo.register(classOf[DataIngestion])
     kryo.register(classOf[GoodnessOfFit])
     kryo.register(classOf[Sorting])
     kryo.register(classOf[Transformers])
-    //com.ipm.nslab.bdns.structure
+    //com.ipm.nslab.bndf.structure
     kryo.register(classOf[CellStructure])
     kryo.register(classOf[CharArrayStructure])
     kryo.register(classOf[CharStructure])
