@@ -1,17 +1,17 @@
-# BDNS User Guide
+# BNDF User Guide
 
 ## Introduction
 
-BDNS is a library for storing and processing large-scale neural data included, but not limited to single(multi) unit and multichannel 
-array recording data in a distributed manner. BDNS's ecosystem is build on top of [Apache Spark](https://spark.apache.org/) 
+BNDF is a library for storing and processing large-scale neural data included, but not limited to single(multi) unit and multichannel
+array recording data in a distributed manner. BNDF's ecosystem is build on top of [Apache Spark](https://spark.apache.org/)
 and [Apache Hadoop](https://hadoop.apache.org/). For storing large-scale raw data, [Apache Parquet](https://parquet.apache.org)
 a columnar data structure and [Apache Hive](https://hive.apache.org/) are used on top of [Hadoop distributed file system (HDFS)](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html). 
 Meta-data information of raw data, are constructed as nested [JSON](https://www.json.org/json-en.htm) files and stored in 
-[mongoDB](https://www.mongodb.com). BDNS's APIs can be used in Scala, Java, Python, R and partially in Matlab.   
+[mongoDB](https://www.mongodb.com). BNDF's APIs can be used in Scala, Java, Python, R and partially in Matlab.
 
-## BDNS Ecosystem
+## BNDF Ecosystem
 
-The ecosystem of the BDNS and it's open source requirement can be found in the following diagram.
+The ecosystem of the BNDF and it's open source requirement can be found in the following diagram.
 
 <p align="center">
 <img src="figures/BdnsEcosystem.png">
@@ -19,11 +19,11 @@ The ecosystem of the BDNS and it's open source requirement can be found in the f
 
 # ARCHITECTURE
 
-BDNS library designed with focus on optimising neural data analysis from two point of view **Data Storing** and **Data Processing**.
+BNDF library designed with focus on optimising neural data analysis from two point of view **Data Storing** and **Data Processing**.
        
 ## Input data
 
-Currently, BDNS supports MAT files as raw input data with conditions described in [MAT File Library](https://github.com/HebiRobotics/MFL). 
+Currently, BNDF supports MAT files as raw input data with conditions described in [MAT File Library](https://github.com/HebiRobotics/MFL).
 The structure of the input MAT files can be shown in the diagram below.
 
 <p align="center">
@@ -39,7 +39,7 @@ Where in the diagram:
 </ol>  
 
 ## Data Storing
-From Data Storing point of view BDNS construct both scalable and standardize formats for meta-data and large scale raw data. 
+From Data Storing point of view BNDF construct both scalable and standardize formats for meta-data and large scale raw data.
 The detail structure of the stored data could be found in the diagram below.
 
 <p align="center">
@@ -52,9 +52,9 @@ Where in the diagram:
 </ol>  
 
 ## Data Processing
-**Spark** Rich APIS made BDNS flexible in Data Processing with Scala, Java, Python and R. Even one could use partially Matlab. 
-BDNS also could be used with third party libraries such as [Thunder](http://docs.thunder-project.org/)
-through spark's Python API. BDNS Data processing flexible options could be found in more detail in the following diagram.
+**Spark** Rich APIS made BNDF flexible in Data Processing with Scala, Java, Python and R. Even one could use partially Matlab.
+BNDF also could be used with third party libraries such as [Thunder](http://docs.thunder-project.org/)
+through spark's Python API. BNDF Data processing flexible options could be found in more detail in the following diagram.
 
 <p align="center">
 <img src="figures/DataProcessingNoMark.png">
@@ -62,17 +62,17 @@ through spark's Python API. BDNS Data processing flexible options could be found
 
 # INSTALLATION
 
-## Building BDNS from Source
+## Building BNDF from Source
 
-You will need to have [Apache Maven](https://maven.apache.org/) 3.6.0 or later installed in order to compile BDNS.
+You will need to have [Apache Maven](https://maven.apache.org/) 3.6.0 or later installed in order to compile BNDF.
 
 ```bash
-$ git clone https://gitlab.com/neuroscience-lab/bdns
-$ cd bdns
+$ git clone https://gitlab.com/neuroscience-lab/bndf
+$ cd bndf
 $ mvn install 
 ```
 
-BDNS could run on any cluster or single machine running and configured following open source tools
+BNDF could run on any cluster or single machine running and configured following open source tools
 
 * [Apache Hadoop](https://hadoop.apache.org/)
 * [Apache Spark](https://spark.apache.org/)
@@ -80,41 +80,41 @@ BDNS could run on any cluster or single machine running and configured following
 * [Apache Zeppelin](https://zeppelin.apache.org/) (Optional)
 * [mongoDB](https://www.mongodb.com)
 
-BDNS executive jar file take two parameter in the following order 
+BNDF executive jar file take two parameter in the following order
 
 * DATA_PATH
 * MONGO_URI
 
 ```bash
 $ spark-submit \ 
-    --class com.ipm.nslab.bdns.RecordingDataLoader \
+    --class com.ipm.nslab.bndf.RecordingDataLoader \
     --master SPARK_MASTER(s)_URL | yarn | mesos \
     --deploy-mode client | cluster \ 
     --executor-memory ${SPARK_EXECUTOR_MEMORY}G \
     --total-executor-cores ${SPARK_EXECUTOR_CORES} \
     --driver-memory ${SPARK_DRIVER_MEMORY}G \
-    PATH_TO_BDNS_JAR_FILE/bdns-0.0.1.jar DATA_PATH  MONGO_URI
+    PATH_TO_BNDF_JAR_FILE/bndf-0.0.1.jar DATA_PATH  MONGO_URI
 ```
 
 Spark-submit's parameters detailed information are available in [submitting-applications](https://spark.apache.org/docs/latest/submitting-applications.html).
-For creating a private cluster and running BDNS see [BdnsCluster](https://gitlab.com/neuroscience-lab/bdnscluster).
+For creating a private cluster and running BNDF see [BdnsCluster](https://gitlab.com/neuroscience-lab/bndfcluster).
 
 # BENCHMARKING
 
-Benchmark result for Running BDNS on different nodes
+Benchmark result for Running BNDF on different nodes
 
-# DEPLOYING BDNS
+# DEPLOYING BNDF
 
-## Deploying BDNS on a Private Cluster
+## Deploying BNDF on a Private Cluster
 
-Instruction for deploying BDNS on private cluster using [Docker](https://www.docker.com/) is fully described at [BdnsCluster](https://gitlab.com/neuroscience-lab/bdnscluster).
+Instruction for deploying BNDF on private cluster using [Docker](https://www.docker.com/) is fully described at [BdnsCluster](https://gitlab.com/neuroscience-lab/bndfcluster).
 
-# BDNS'S APIS
+# BNDF'S APIS
 
 ## Scala 
 
 For analyzing structured data we could use either Spark's shell or [Apache Zeppelin](https://zeppelin.apache.org/). 
-For communicating with mongoDB and hive required dependencies should include in spark-sumbit (see [conf](https://gitlab.com/neuroscience-lab/bdnscluster/-/blob/master/volumes/zeppelin/conf/zeppelin-env.sh)). 
+For communicating with mongoDB and hive required dependencies should include in spark-sumbit (see [conf](https://gitlab.com/neuroscience-lab/bndfcluster/-/blob/master/volumes/zeppelin/conf/zeppelin-env.sh)).
 This examples are using sample-data available in [sample-data](https://www.dropbox.com/sh/64nsb3wrzvmbm85/AABPlZYhunVCx70KYtjDD_D4a?dl=0).
 ### Define MongoReader
 
@@ -135,8 +135,8 @@ def Reader(spark: SparkSession,  uri: String, database: String, collection: Stri
 
   }
 ```
-`MONGO_URI` is the mongoDB URL defined in the cluster setup. if you used [BdnsCluster](https://gitlab.com/neuroscience-lab/bdnscluster) 
-for deploying BDNS, change this to:
+`MONGO_URI` is the mongoDB URL defined in the cluster setup. if you used [BdnsCluster](https://gitlab.com/neuroscience-lab/bndfcluster)
+for deploying BNDF, change this to:
 
 ```scala
 val MONGO_URI = "mongodb://root:ns123@mongos:27017/admin"
@@ -316,7 +316,7 @@ SELECT * FROM experiment_kopo_2018_04_25_j9_8600 LIMIT 5
 
 ## Python
 
-BDNS Python API could be used with [Thunder](http://docs.thunder-project.org/) or directly with Spark's Python API.
+BNDF Python API could be used with [Thunder](http://docs.thunder-project.org/) or directly with Spark's Python API.
 
 ## R
 

@@ -42,8 +42,8 @@ Currently, BNDF supports MAT files as raw input data with conditions described i
 You will need to have [Apache Maven](https://maven.apache.org/) 3.6.0 or later installed in order to compile BNDF.
 
 ```bash
-$ git clone https://gitlab.com/neuroscience-lab/bdns
-$ cd bdns
+$ git clone https://gitlab.com/neuroscience-lab/bndf
+$ cd bndf
 $ mvn install 
 ```
 
@@ -64,17 +64,17 @@ BNDF executive jar file take two parameters in the following order
 
 ```bash
 $ spark-submit \ 
-    --class com.ipm.nslab.bdns.${BNDF_MODULE_NAME} \
+    --class com.ipm.nslab.bndf.${BNDF_MODULE_NAME} \
     --master ${SPARK_MASTER(s)_URL} | yarn | mesos \
     --deploy-mode client | cluster \ 
     --executor-memory ${SPARK_EXECUTOR_MEMORY}G \
     --total-executor-cores ${SPARK_EXECUTOR_CORES} \
     --driver-memory ${SPARK_DRIVER_MEMORY}G \
-    PATH_TO_BNDF_JAR_FILE/bdns-${JAR_FILE_VERSION}.jar DATA_PATH  MONGO_URI
+    PATH_TO_BNDF_JAR_FILE/bndf-${JAR_FILE_VERSION}.jar DATA_PATH  MONGO_URI
 ```
 
 Spark-submit's parameters detailed information are available in [submitting-applications](https://spark.apache.org/docs/latest/submitting-applications.html).
-For creating a private cluster and information about other runtime parameters not discussed here, see [BdnsCluster](https://gitlab.com/neuroscience-lab/bdnscluster).
+For creating a private cluster and information about other runtime parameters not discussed here, see [BdnsCluster](https://gitlab.com/neuroscience-lab/bndfcluster).
 
 ### Data Locality
 
@@ -88,4 +88,4 @@ Otherwise, data locality could create major bottlenecks while processing data wi
 
 ## Documentation
 
-BNDF documentation are available in [bdns-doc](https://bdns.readthedocs.io/).
+BNDF documentation are available in [bndf-doc](https://bndf.readthedocs.io/).
