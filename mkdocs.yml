@@ -5,7 +5,7 @@ theme:
   name: mkdocs
   nav_style: dark
   highlightjs: true
-  collapse_navigation: true
+  collapse_navigation: false
   hljs_languages:
     - yaml
     - rust
