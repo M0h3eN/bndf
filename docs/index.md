@@ -19,11 +19,10 @@ The ecosystem of the BNDF and it's open source requirement described in the foll
 
 # ARCHITECTURE
 
+BNDF library designed with focus on optimising neural data analysis from two point of view **Data Storing** and **Data Processing**.
 <p align="center">
 <img src="figures/arch.png">
 </p>
-
-BNDF library designed with focus on optimising neural data analysis from two point of view **Data Storing** and **Data Processing**.
        
 ## Input data
 
