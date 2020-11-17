@@ -3,8 +3,9 @@ site_url: https://gitlab.com/neuroscience-lab/bndf
 
 theme:
   name: mkdocs
+  nav_style: dark
   highlightjs: true
-  titles_only: true
+  collapse_navigation: true
   hljs_languages:
     - yaml
     - rust
