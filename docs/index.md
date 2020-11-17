@@ -46,7 +46,7 @@ From Data Storing point of view BNDF construct both scalable and standardize for
 The detail structure of the stored data could be found in the diagram below.
 
 <p align="center">
-<img width="520" src="figures/DataStoring.png">
+<img width="620" src="figures/DataStoring.png">
 </p>
 Where in the diagram:
 <ol type="a">

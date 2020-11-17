@@ -4,9 +4,11 @@ site_url: https://gitlab.com/neuroscience-lab/bndf
 theme:
   name: mkdocs
   highlightjs: true
+  titles_only: true
   hljs_languages:
     - yaml
     - rust
     - bash
     - text
     - scala
+    - sql
