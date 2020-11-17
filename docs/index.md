@@ -46,7 +46,7 @@ From Data Storing point of view BNDF construct both scalable and standardize for
 The detail structure of the stored data could be found in the diagram below.
 
 <p align="center">
-<img src="figures/DataStoring.png">
+<img width="420" src="figures/DataStoring.png">
 </p>
 Where in the diagram:
 <ol type="a">
@@ -60,10 +60,10 @@ BNDF also could be used with third party libraries such as [Thunder](http://docs
 through spark's Python API. 
 
 ### Spike Sorting
-BNDF provides **Spike-Sorter** module as one of the most widely used pre-processing procedures in neural data analysis.
+BNDF provides **Spike sorter** module as one of the most widely used pre-processing procedures in neural data analysis.
    
 <p align="center">
-<img src="figures/sorter.png">
+<img width="420" src="figures/sorter.png">
 </p>   
 
 # INSTALLATION
@@ -131,7 +131,7 @@ We evaluated BNDF performance benchmarks on three datasets with 30, 90 and 250 G
 
 ## RecordingDataLoader (I/O)
 
-left-hand side of the figure corresponds to reading local MAT files and convert them in BNDF standard structure (RecordingDataLoader). The other side related to I/O operations in BNDF structure.  
+Left-hand side of the figure corresponds to reading local MAT files and convert them in BNDF standard structure (RecordingDataLoader). The other side related to I/O operations in BNDF structure.  
 <p align="center">
 <img src="figures/bndf_Io_bench.png">
 </p> 
