@@ -6,6 +6,7 @@ theme:
   nav_style: dark
   highlightjs: true
   collapse_navigation: true
+  titles_only: true
   hljs_languages:
     - yaml
     - rust
