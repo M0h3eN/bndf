@@ -11,13 +11,17 @@ Meta-data information of raw data, are constructed as nested [JSON](https://www.
 
 ## BNDF Ecosystem
 
-The ecosystem of the BNDF and it's open source requirement can be found in the following diagram.
+The ecosystem of the BNDF and it's open source requirement described in the following diagram.
 
 <p align="center">
 <img src="figures/BdnsEcosystem.png">
 </p>
 
 # ARCHITECTURE
+
+<p align="center">
+<img src="figures/arch.png">
+</p>
 
 BNDF library designed with focus on optimising neural data analysis from two point of view **Data Storing** and **Data Processing**.
        
@@ -54,10 +58,13 @@ Where in the diagram:
 ## Data Processing
 **Spark** Rich APIS made BNDF flexible in Data Processing with Scala, Java, Python and R. Even one could use partially Matlab.
 BNDF also could be used with third party libraries such as [Thunder](http://docs.thunder-project.org/)
-through spark's Python API. BNDF Data processing flexible options could be found in more detail in the following diagram.
+through spark's Python API. 
 
+### Spike Sorting
+BNDF provides **Spike-Sorter** module as one of the most widely used pre-processing procedures in neural data analysis.
+   
 <p align="center">
-<img src="figures/DataProcessingNoMark.png">
+<img src="figures/sorter.png">
 </p>   
 
 # INSTALLATION
@@ -80,7 +87,10 @@ BNDF could run on any cluster or single machine running and configured following
 * [Apache Zeppelin](https://zeppelin.apache.org/) (Optional)
 * [mongoDB](https://www.mongodb.com)
 
-BNDF executive jar file take two parameter in the following order
+Currently, BNDF have two modules **RecordingDataLoader** and **Spike sorter**.
+
+### RecordingDataLoader
+RecordingDataLoader executive jar-file take two parameters in the following order
 
 * DATA_PATH
 * MONGO_URI
@@ -93,21 +103,57 @@ $ spark-submit \
     --executor-memory ${SPARK_EXECUTOR_MEMORY}G \
     --total-executor-cores ${SPARK_EXECUTOR_CORES} \
     --driver-memory ${SPARK_DRIVER_MEMORY}G \
-    PATH_TO_BNDF_JAR_FILE/bndf-0.0.1.jar DATA_PATH  MONGO_URI
+    PATH_TO_BNDF_JAR_FILE/bndf-${BNDF_CURRENT_VERSION}.jar DATA_PATH  MONGO_URI
+```
+
+### Spike sorter
+Spike sorter executive jar-file take two parameters in the following order
+
+* MONGO_URI
+* EXPERIMENT_NAME
+
+```bash
+$ spark-submit \ 
+    --class com.ipm.nslab.bndf.Sorter \
+    --master SPARK_MASTER(s)_URL | yarn | mesos \
+    --deploy-mode client | cluster \ 
+    --executor-memory ${SPARK_EXECUTOR_MEMORY}G \
+    --total-executor-cores ${SPARK_EXECUTOR_CORES} \
+    --driver-memory ${SPARK_DRIVER_MEMORY}G \
+    PATH_TO_BNDF_JAR_FILE/bndf-${BNDF_CURRENT_VERSION}.jar MONGO_URI EXPERIMENT_NAME
 ```
 
 Spark-submit's parameters detailed information are available in [submitting-applications](https://spark.apache.org/docs/latest/submitting-applications.html).
-For creating a private cluster and running BNDF see [BdnsCluster](https://gitlab.com/neuroscience-lab/bndfcluster).
+For creating a private cluster, running BNDF and detail about its modules configurations see [BdnsCluster](https://gitlab.com/neuroscience-lab/bndfcluster).
 
 # BENCHMARKING
 
-Benchmark result for Running BNDF on different nodes
+We evaluated BNDF performance benchmarks on three datasets with 30, 90 and 250 GB size.
+
+## RecordingDataLoader (I/O)
+
+left-hand side of the figure corresponds to reading local MAT files and convert them in BNDF standard structure (RecordingDataLoader). The other side related to I/O operations in BNDF structure.  
+<p align="center">
+<img src="figures/bndf_Io_bench.png">
+</p> 
+
+## Spike sorter
+
+<p align="center">
+<img src="figures/sorter_cluster_bench.png">
+</p>
+
+## BNDF sorter vs Matlab sorter
+
+<p align="center">
+<img src="figures/sorter_clusterWithMat_bench.png">
+</p>
 
 # DEPLOYING BNDF
 
 ## Deploying BNDF on a Private Cluster
 
-Instruction for deploying BNDF on private cluster using [Docker](https://www.docker.com/) is fully described at [BdnsCluster](https://gitlab.com/neuroscience-lab/bndfcluster).
+Instruction for deploying BNDF on private cluster using [Docker](https://www.docker.com/) is fully described at [BndfCluster](https://gitlab.com/neuroscience-lab/bndfcluster).
 
 # BNDF'S APIS
 
@@ -115,7 +161,8 @@ Instruction for deploying BNDF on private cluster using [Docker](https://www.doc
 
 For analyzing structured data we could use either Spark's shell or [Apache Zeppelin](https://zeppelin.apache.org/). 
 For communicating with mongoDB and hive required dependencies should include in spark-sumbit (see [conf](https://gitlab.com/neuroscience-lab/bndfcluster/-/blob/master/volumes/zeppelin/conf/zeppelin-env.sh)).
-This examples are using sample-data available in [sample-data](https://www.dropbox.com/sh/64nsb3wrzvmbm85/AABPlZYhunVCx70KYtjDD_D4a?dl=0).
+These examples are using sample-data available in [sample-data](https://www.dropbox.com/sh/64nsb3wrzvmbm85/AABPlZYhunVCx70KYtjDD_D4a?dl=0).
+
 ### Define MongoReader
 
 ```scala
@@ -135,7 +182,7 @@ def Reader(spark: SparkSession,  uri: String, database: String, collection: Stri
 
   }
 ```
-`MONGO_URI` is the mongoDB URL defined in the cluster setup. if you used [BdnsCluster](https://gitlab.com/neuroscience-lab/bndfcluster)
+`MONGO_URI` is the mongoDB URL defined in the cluster setup. if you used [BndfCluster](https://gitlab.com/neuroscience-lab/bndfcluster)
 for deploying BNDF, change this to:
 
 ```scala
@@ -314,10 +361,6 @@ SELECT * FROM experiment_kopo_2018_04_25_j9_8600 LIMIT 5
 |  1.3884074687957764 | 40004244  | channelik5_1  |
 | 1.363419771194458  | 40004242  |  channelik5_1 |
 
-## Python
+## Other API's
 
-BNDF Python API could be used with [Thunder](http://docs.thunder-project.org/) or directly with Spark's Python API.
-
-## R
-
-## Matlab
+Currently BNDF is only supported through Scala API, and more specificly with spark-shell or spark-submit jobs. BNDF-cli or python API could be added in the future release.  
