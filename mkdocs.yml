@@ -9,3 +9,4 @@ theme:
     - rust
     - bash
     - text
+    - scala

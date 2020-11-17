@@ -46,7 +46,7 @@ From Data Storing point of view BNDF construct both scalable and standardize for
 The detail structure of the stored data could be found in the diagram below.
 
 <p align="center">
-<img width="420" src="figures/DataStoring.png">
+<img width="520" src="figures/DataStoring.png">
 </p>
 Where in the diagram:
 <ol type="a">
@@ -63,7 +63,7 @@ through spark's Python API.
 BNDF provides **Spike sorter** module as one of the most widely used pre-processing procedures in neural data analysis.
    
 <p align="center">
-<img width="420" src="figures/sorter.png">
+<img src="figures/sorter.png">
 </p>   
 
 # INSTALLATION
@@ -139,7 +139,7 @@ Left-hand side of the figure corresponds to reading local MAT files and convert 
 ## Spike sorter
 
 <p align="center">
-<img src="figures/sorter_cluster_bench.png">
+<img width="520" src="figures/sorter_cluster_bench.png">
 </p>
 
 ## BNDF sorter vs Matlab sorter
