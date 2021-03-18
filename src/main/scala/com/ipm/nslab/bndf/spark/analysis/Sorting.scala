@@ -8,10 +8,13 @@ import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.ml.clustering.GaussianMixture
 import org.apache.spark.ml.feature.PCA
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import org.apache.spark.sql.functions.{abs, col, collect_list, count, explode, lag, lit, mean,
-  monotonically_increasing_id, sequence, sort_array, sqrt, stddev, struct, when, size, broadcast}
+import org.apache.spark.sql.functions.{abs, col, collect_list, explode, lag, lit,
+  monotonically_increasing_id, sequence, sort_array, struct, when, size, broadcast}
 import org.apache.spark.sql.expressions.Window
 
+/** The Implementation of the Spike Sorting Module
+ * Spike sorting procedure is applied with SparkSql and SparkML pipelines
+ */
 class Sorting {
 
   val transformers = new Transformers
@@ -20,6 +23,14 @@ class Sorting {
 
   val logger: Logger = Logger(s"${this.getClass.getName}")
 
+  /** Applies the thresholding procedure on the signal provided by:
+   * Rey, H. G., Pedreira, C. & Quian Quiroga, R. Past, present and future of spike sorting
+   * techniques. Brain Res. Bull. 119, 106–117 (2015)
+   * @param spark Active spark session
+   * @param ChannelDataset The Channel Dataset
+   * @param fileInfo The specific spike trains name (session, experiment, or any identifier that specifies the spike train set)
+   * @return The Thresholded Dataset
+   */
   def getThresholdDataset(spark: SparkSession, ChannelDataset: Dataset[Row], fileInfo: String): Dataset[Row] ={
     import spark.implicits._
 
@@ -35,23 +46,29 @@ class Sorting {
     thresholdDataset
   }
 
+  /** Applies the windowing step procedure on the thresholded data set
+   * @param spark Active spark session
+   * @param channelDataset The Channel Dataset
+   * @param fileInfo The specific spike trains name (session, experiment, or any identifier that specifies the spike train set)
+   * @param n1 The lower bound of the window interval
+   * @param n2 The upper bound of the window interval
+   * @return The Windowed Dataset
+   */
   def getWindowedSpikeDataset(spark: SparkSession, channelDataset: Dataset[Row],
                               fileInfo: String, n1: Int, n2: Int): Dataset[Row] ={
     import spark.implicits._
 
     val overFileInfo = Window.partitionBy("FileInfo").orderBy("Time")
-
     // Threshold options:
-    // 1- signal < -t
-    // 1- signal > t
-    // 1- (signal < -t) || (signal > t)
-
+    // 1- signal < -t --> This is applied here.
+    // 2- signal > t
+    // 3- (signal < -t) || (signal > t)
     val thresholdedDataset = getThresholdDataset(spark, channelDataset, fileInfo)
       .withColumn("Spike", when($"signal" < -$"threshold", 1).otherwise(0))
       .select($"FileInfo", $"Time", $"Signal", $"Spike")
     
 
-    val windowdSpikeDataset = thresholdedDataset.filter($"Spike" === 1)
+    val windowedSpikeDataset = thresholdedDataset.filter($"Spike" === 1)
       .select($"FileInfo", $"Signal", $"Spike", $"Time", lag($"Time", 1) over overFileInfo as "LAG")
       .withColumn("LAG", when($"LAG".isNull, 0).otherwise($"LAG"))
       .withColumn("diff", $"Time" - $"LAG")
@@ -64,10 +81,18 @@ class Sorting {
       .withColumn("Time", explode($"SpikeWindow"))
       .drop("SpikeWindow")
 
-    windowdSpikeDataset
+    windowedSpikeDataset
 
   }
 
+  /** Transforms sparkSql array column to SparkMl Vector Column
+   * @param spark Active spark session
+   * @param channelDataset The Channel Dataset
+   * @param fileInfo The specific spike trains name (session, experiment, or any identifier that specifies the spike train set)
+   * @param n1 The lower bound of the window interval
+   * @param n2 The upper bound of the window interval
+   * @return The SparkMl Transformed dataset
+   */
   def getMlTransformedColumnDataset(spark: SparkSession, channelDataset: Dataset[Row],
                                     fileInfo: String, n1: Int, n2: Int): Dataset[Row] ={
     import spark.implicits._
@@ -84,6 +109,15 @@ class Sorting {
 
   }
 
+  /** Provides the spike sorting pipelines
+   * 1- Applies the dimension reduction procedure by PCA
+   * 2- Applies The GMM clustering for the range k (2 to 6)
+   * 3- Select the best clustering number based on BIC
+   * @param spark Active spark session
+   * @param channelDataset The Channel Dataset
+   * @param fileInfo The specific spike trains name (session, experiment, or any identifier that specifies the spike train set)
+   * @return The Sorted Dataset
+   */
   def simpleSorting(spark: SparkSession, channelDataset: Dataset[Row], fileInfo: String) :Dataset[Row] ={
 
     val mlTransformedDataset = getMlTransformedColumnDataset(spark, channelDataset, fileInfo, 30, 50).persist()
@@ -112,7 +146,7 @@ class Sorting {
 
     val model = pipeline.fit(mlTransformedDataset)
 
-    // get best model based on BIC
+    // Get best model based on BIC
 
     val bicValues = (minK to maxK).map(k => BICValues(k, goodnessOfFit.BIC(model, k - 1 ))).toArray
     val optimalK = bicValues.sortBy(_.bic).apply(0).k
@@ -130,6 +164,13 @@ class Sorting {
     sortedDataset
   }
 
+  /** The Wrapper that calls sorter based on experiment name or generally available spike trains specified by
+   * the meta-data information to perform sorting
+   * @param spark Active spark session
+   * @param metaDataset The corresponding meta-data Dataset
+   * @param experimentName The required experiment name for sorting
+   * @return The Sorted Dataset
+   */
   def sorter(spark: SparkSession, metaDataset: Dataset[Row], experimentName: String): Dataset[Row] ={
     import spark.implicits._
 

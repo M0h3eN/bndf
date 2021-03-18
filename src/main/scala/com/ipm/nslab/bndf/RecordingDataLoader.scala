@@ -9,22 +9,27 @@ import com.typesafe.scalalogging.Logger
 import scala.util.Try
 
 
-  /**
- * @author ${Mohsen Hadianpour}
+  /** Implements Recording Data Loader module as a spark-submit job by initiating required fields and classes
+ * Initiates Raw file path, spark configs, HDFS paths, Mongo connection
  */
 object RecordingDataLoader extends DataIngestion(MONGO_URI = ""){
 
     override val logger: Logger = Logger(s"${this.getClass.getName}")
 
-    val sparkConfig = new SparkConfig
+    private val sparkConfig: SparkConfig = new SparkConfig
 
-  def main(args : Array[String]) {
+    /** All operation related to RecordingDataLoader will start from this function
+     * @param args It takes two argument from the user respectively
+     *             1- Raw data path in the spark driver node
+     *             2- A MongoDB URL connection for storing meta-data
+     */
+    def main(args : Array[String]) {
 
     if(args.isEmpty) logger.error("", throw new Exception("Path must specified"))
 
-    val dir = args.apply(0)
+    val dir = args(0)
     val MONGO_URI_DEFAULT = "mongodb://root:ns123@mongos:27017/admin"
-    val MONGO_URI = Try(args.apply(1)) getOrElse(MONGO_URI_DEFAULT)
+    val MONGO_URI = Try(args(1)) getOrElse(MONGO_URI_DEFAULT)
     val dataIngestion = new DataIngestion(MONGO_URI)
     val conf = sparkConfig.sparkInitialConf("Recording Data Loader", MONGO_URI, MONGO_DB_NAME, numberOfSqlPartition)
     val spark = sparkConfig.sparkSessionCreator(conf)

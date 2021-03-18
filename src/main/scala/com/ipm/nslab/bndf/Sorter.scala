@@ -10,28 +10,40 @@ import org.apache.spark.sql.SaveMode
 
 import scala.util.Try
 
+/** Implement Spike Sorter Module as a spark-submit job by initiating required fields and classes
+ * Initiates spark configs, HDFS paths, Mongo connection to access meta-data
+ */
 object Sorter {
 
   val logger: Logger = Logger(s"${this.getClass.getName}")
 
-  val sparkConfig = new SparkConfig
-  val sparkWrite = new SparkWriter
-  val hdfsOperator = new HdfsOperator
-  val HIVE_DB = "sortedDataDB"
-  val SPARK_CHECKPOINT_DIR = "/spark/checkpoint_bdns"
-  val MAIN_SORTED_DATA_DIR = "/sorted-data"
+  private val sparkConfig: SparkConfig = new SparkConfig
+  private val sparkWrite: SparkWriter = new SparkWriter
 
-  val MONGO_DB_NAME = "MetaDataDB"
-  val MONGO_COLLECTION = "Experiments"
+  private val hdfsOperator: HdfsOperator = new HdfsOperator
 
-  val numberOfSqlPartition = 500
+  private val HIVE_DB: String = "sortedDataDB"
 
+  private val SPARK_CHECKPOINT_DIR: String = "/spark/checkpoint_bdns"
+  private val MAIN_SORTED_DATA_DIR: String = "/sorted-data"
+
+  private val MONGO_DB_NAME: String = "MetaDataDB"
+  private val MONGO_COLLECTION: String = "Experiments"
+
+  private val numberOfSqlPartition: Int = 500
+
+  /** All operation related to sorting will start from this function
+   * @param args It takes two argument from the user respectively
+   *             1- A MongoDB URL connection of stored meta-data
+   *             2- The Experiment(Session) name for sorting procedure
+   *             If the argument 2 is not specified by the user, Sorter will process all available Experiments(Sessions).
+   */
   def main(args: Array[String]): Unit = {
 
     if(args.isEmpty) logger.error("", throw new Exception("Experiment name must specified"))
 
     val MONGO_URI_DEFAULT = "mongodb://root:ns123@mongos:27017/admin"
-    val MONGO_URI = Try(args.apply(0)).getOrElse(MONGO_URI_DEFAULT)
+    val MONGO_URI = Try(args(0)).getOrElse(MONGO_URI_DEFAULT)
     val sorting = new Sorting
     val conf = sparkConfig.sparkInitialConf("Spike Sorter", MONGO_URI, MONGO_DB_NAME, numberOfSqlPartition)
     val spark = sparkConfig.sparkSessionCreator(conf)
@@ -42,8 +54,8 @@ object Sorter {
 
     if (!spark.catalog.databaseExists(HIVE_DB)) spark.sql(s"CREATE DATABASE $HIVE_DB")
 
-    val exList = mongoConnector.Reader("Experiments").select("_id").collect().map(_.getAs[String](0))
-    val ex = Try(args.apply(1))
+    val exList = mongoConnector.Reader(MONGO_COLLECTION).select("_id").collect().map(_.getAs[String](0))
+    val ex = Try(args(1))
 
     if(ex.isSuccess) {
       val metaData = mongoConnector.Reader(ex.get)

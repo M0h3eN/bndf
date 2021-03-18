@@ -2,8 +2,18 @@ package com.ipm.nslab.bndf.commons.io
 
 import org.apache.spark.sql.{Dataset, Row, SaveMode}
 
+/** Provides Spark Output operations
+ *
+ */
 class SparkWriter {
 
+  /** Writes a dataset as a Hive table
+   * @param dataset The input dataset
+   * @param saveMode The Spark saveMode
+   * @param dataBase The Hive database
+   * @param tableName The Hive table name
+   * @param partitionColumn The partition column(s) if needed
+   */
   def writeHiveTable(dataset: Dataset[Row], saveMode: SaveMode,
                      dataBase: String, tableName: String, partitionColumn: String*): Unit={
 
@@ -24,6 +34,12 @@ class SparkWriter {
 
   }
 
+  /** Writes a dataset as Parquet file in HDFS
+   * @param dataset The input dataset
+   * @param saveMode The Spark saveMode
+   * @param writePath The destination path in HDFS
+   * @param partitionColumn The partition column(s) if needed
+   */
   def writeParquetInHdfs(dataset: Dataset[Row], saveMode: SaveMode, writePath: String,
                          partitionColumn: String*): Unit ={
 

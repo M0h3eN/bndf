@@ -3,8 +3,17 @@ package com.ipm.nslab.bndf.spark.analysis
 import org.apache.spark.ml.PipelineModel
 import org.apache.spark.ml.clustering.GaussianMixtureModel
 
+/** Provides the goodness of fit methods for validating the models
+ *
+ */
 class GoodnessOfFit {
 
+  /** Compute the Bayesian Information Criteria (BIC) for the likelihood based modeling
+   * @param model The used model
+   * @param st The corresponding stage number in the pipeline
+   * @tparam Pipeline Ensuring the correct type for the pipeline
+   * @return The BIC value
+   */
   def BIC[Pipeline](model: PipelineModel, st: Int) :Double = {
 
     // Cluster member size

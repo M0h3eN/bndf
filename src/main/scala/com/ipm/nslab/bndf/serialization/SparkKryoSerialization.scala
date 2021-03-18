@@ -11,10 +11,16 @@ import com.ipm.nslab.bndf.structure.{CellStructure, CharArrayStructure, CharStru
 import org.apache.log4j.Logger
 import org.apache.spark.serializer.KryoRegistrator
 
+/** Registers custom scala class used to the KryoRegistrator
+ * Making sure that all classes are passed to Kryo Serializer properly
+ */
 class SparkKryoSerialization extends KryoRegistrator {
 
   val logger: Logger = Logger.getLogger(s"${this.getClass.getName}")
 
+  /** Register custom classes
+   * @param kryo The Kryo serializer instance
+   */
   override def registerClasses(kryo: Kryo) {
 
     def registerByName(kryo: Kryo, name: String) {

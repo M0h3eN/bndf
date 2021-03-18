@@ -14,6 +14,10 @@ import us.hebi.matlab.mat.format.Mat5.readFromFile
 
 import scala.util.Try
 
+/** Considers all core functionality related to data ingestion
+ * These features are mainly used by the RecordingDataLoader module
+ * @param MONGO_URI MongoDB connection URL
+ */
 class DataIngestion(MONGO_URI: String){
 
   val logger: Logger = Logger(s"${this.getClass.getName}")
@@ -29,6 +33,10 @@ class DataIngestion(MONGO_URI: String){
   val numberOfSqlPartition = 500
   val numberOfSlices = 500
 
+  /** Provides meta-data write operation to MongoDB
+   * @param spark Active spark session
+   * @param rootDir The raw data root directory
+   */
   def writeExperimentMetaData(spark: SparkSession, rootDir: String): Unit ={
     import spark.implicits._
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)
@@ -39,6 +47,12 @@ class DataIngestion(MONGO_URI: String){
 
   }
 
+  /** Creates events dataset and write it in HDFS as the columnar parquet files
+   * @param spark Active spark session
+   * @param rootDir The raw data root directory
+   * @param pathProperties The required information about raw files see PathPropertiesEvaluator case class
+   * @return Event Dataset
+   */
   def writeAndCreateEvent(spark: SparkSession, rootDir: String, pathProperties: PathPropertiesEvaluator): Dataset[Row] ={
     import spark.implicits._
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)
@@ -102,6 +116,13 @@ class DataIngestion(MONGO_URI: String){
 
   }
 
+  /** Provides the channel data structure
+   * Channel structure is created by matching constructed raw-data and event-data via Time index
+   * @param spark Active spark session
+   * @param eventDataSet Event Dataset
+   * @param rootDir The raw data root directory
+   * @param pathProperties The required information about raw files see PathPropertiesEvaluator case class
+   */
   def writeAndCreateChannel(spark: SparkSession, eventDataSet: Dataset[Row], rootDir: String, pathProperties: PathPropertiesEvaluator): Unit={
     import spark.implicits._
     val mongoConnector = MongoConnector(spark, MONGO_URI, MONGO_DB_NAME)

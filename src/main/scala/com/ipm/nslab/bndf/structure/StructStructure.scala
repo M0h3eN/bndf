@@ -6,8 +6,17 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable
 import scala.collection.immutable.ListMap
 
+/** Provides the decomposition of nested struct type into a standard structure
+ * This class extends the CellStructure, MatrixStructure, CharArrayStructure, and CharStructure classes
+ */
 class StructStructure extends CellStructure {
 
+  /** A recursive call that generates all possible parent and child relation for a given struct into a Map for
+   * creating the meta-data
+   * @param structMat The corresponding struct field
+   * @param parentName The parent name of the struct field
+   * @return Nested Map of parents and childes
+   */
   def parseStructToMap(structMat: Struct, parentName: String): Map[String, Any] = {
 
     val fieldNames = structMat.getFieldNames.asScala.toArray
@@ -16,10 +25,10 @@ class StructStructure extends CellStructure {
 
     if (structDimension <= 2) {
 
-      val fiealdClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
-      val fiealdInfo = fieldNames.zip(fiealdClassNames).toMap
+      val fieldClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
+      val fieldInfo = fieldNames.zip(fieldClassNames).toMap
 
-      val structFieldsMapIterator: immutable.Iterable[ListMap[String, Any]] = fiealdInfo map { case (fn, cl) =>
+      val structFieldsMapIterator: immutable.Iterable[ListMap[String, Any]] = fieldInfo map { case (fn, cl) =>
 
         val mapFields: Map[String, Any] = cl match {
 
@@ -43,11 +52,11 @@ class StructStructure extends CellStructure {
 
     } else {
 
-      val fiealdClassNames = fieldNames.map(cl => structMat.get(cl, 0).getClass.toString.split(" ").apply(1))
-      val fiealdInfo = fieldNames.zip(fiealdClassNames).toMap
+      val fieldClassNames = fieldNames.map(cl => structMat.get(cl, 0).getClass.toString.split(" ").apply(1))
+      val fieldInfo = fieldNames.zip(fieldClassNames).toMap
       val structRowNum = structMat.getDimensions.apply(1)
 
-      val structFieldsMapIterator = fiealdInfo map { case (fn, cl) =>
+      val structFieldsMapIterator = fieldInfo map { case (fn, cl) =>
 
         val mapFields = cl match {
 
@@ -73,6 +82,12 @@ class StructStructure extends CellStructure {
 
   }
 
+  /** A recursive call that extract raw data (Signal values) for a given struct and shape them into the DataStructure type
+   * @param structMat The corresponding struct field
+   * @param timeIndex Index of the time stamp, ensuring signal-time order
+   * @param parentName The parent name of the struct field
+   * @return Array of DataStructure which is the desired raw-data structure
+   */
   def parseStructToDataStructure(structMat: Struct, timeIndex: Long, parentName: String): Option[Array[DataStructure]] ={
 
     val fieldNames = structMat.getFieldNames.asScala.toArray
@@ -81,10 +96,10 @@ class StructStructure extends CellStructure {
 
     if (structDimension <= 2) {
 
-      val fiealdClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
-      val fiealdInfo = fieldNames.zip(fiealdClassNames).toMap
+      val fieldClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
+      val fieldInfo = fieldNames.zip(fieldClassNames).toMap
 
-      val structFieldsMapIterator = fiealdInfo map { case (fn, cl) =>
+      val structFieldsMapIterator = fieldInfo map { case (fn, cl) =>
 
         if (cl.equals("us.hebi.matlab.mat.format.MatMatrix")){
           val result = parseMatrixToDataStructure(structMat.getMatrix(fn), timeIndex, fn)
@@ -109,6 +124,12 @@ class StructStructure extends CellStructure {
 
   }
 
+  /** A recursive call that extract event information for a given struct and shape them into the EventStructure type
+   * Event structure is very similar to data structure
+   * @param structMat The corresponding struct field
+   * @param parentName The parent name of the struct field
+   * @return Array of EventStructure which will be enrich the raw-data structure
+   */
   def parseStructToEventStructure(structMat: Struct, parentName: String): Option[Array[EventStructure]] ={
 
     val fieldNames = structMat.getFieldNames.asScala.toArray
@@ -117,10 +138,10 @@ class StructStructure extends CellStructure {
 
     if (structDimension <= 2) {
 
-      val fiealdClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
-      val fiealdInfo = fieldNames.zip(fiealdClassNames).toMap
+      val fieldClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
+      val fieldInfo = fieldNames.zip(fieldClassNames).toMap
 
-      val structFieldsMapIterator = fiealdInfo map { case (fn, cl) =>
+      val structFieldsMapIterator = fieldInfo map { case (fn, cl) =>
 
         if (cl.equals("us.hebi.matlab.mat.format.MatMatrix")){
           val result = parseMatrixToEventStructure(structMat.getMatrix(fn), fn)
@@ -145,6 +166,12 @@ class StructStructure extends CellStructure {
   }
 
 
+  /** A recursive call for search in a struct for a specific field
+   * @param structMat The corresponding struct field
+   * @param parentName The parent name of the struct field
+   * @param field The desired field name
+   * @return The value of the desired field name
+   */
   def getStructValue(structMat: Struct, parentName: String, field: String): Option[Array[String]] ={
 
     val fieldNames = structMat.getFieldNames.asScala.toArray
@@ -152,10 +179,10 @@ class StructStructure extends CellStructure {
 
     if (structDimension <= 2) {
 
-      val fiealdClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
-      val fiealdInfo: Array[(String, String)] = fieldNames.zip(fiealdClassNames)
+      val fieldClassNames = fieldNames.map(cl => structMat.get(cl).getClass.toString.split(" ").apply(1))
+      val fieldInfo: Array[(String, String)] = fieldNames.zip(fieldClassNames)
 
-        val structFieldsValue = fiealdInfo.map(x => {
+        val structFieldsValue = fieldInfo.map(x => {
 
           val fn = x._1
           val cl = x._2
