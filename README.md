@@ -21,20 +21,6 @@ BNDF provide capabilities including, but not limited to:
 ### File Format
 Currently, BNDF supports MAT files as raw input data with conditions described in [MAT File Library](https://github.com/HebiRobotics/MFL). 
 
-### Input MAT file structure
-
-<p align="center">
-<img width="420" src="docs/figures/MatTypeConstraint.png">
-</p>
-
-<ol type="a">
-  <li>Raw MAT file consist of struct, cell, matrix and char type in root level of the file.</li>
-  <li>Each fields in file could have one of the illustrated structures, while struct and cell type could be nested through next level.</li>
-  <li>One-level Struct type nesting, it could be nested through itself or the other types.</li>
-  <li>Struct field is capable of n-level nesting.</li>
-  <li>The last state of nesting struct field, resulting one of the char or matrix field being the leaf node.</li>
-</ol> 
-
 ## Getting Started
 
 ### Building from Source
@@ -85,6 +71,20 @@ It is very important input data placed in the same network as cluster or, a fast
  or other protocol like [Mountable HDFS](https://docs.cloudera.com/documentation/enterprise/latest/topics/cdh_ig_hdfs_mountable.html).
 
 Otherwise, data locality could create major bottlenecks while processing data with Spark.
+
+## Limitation, Current, and Future work
+Currently BNDF is at its early stage of developement and require various extension to be fully functional framework. 
+
+- Currently, BNDF only supports MAT files. I am working on adding commonly used file format like, [Nwb](https://www.nwb.org), 
+  [Nix](https://nixio.readthedocs.io/en/latest/getting_started.html), and [Nio](https://neo.readthedocs.io/en/stable/).
+- The functionality of BNDF schema, or generally its parser is limited. Since most of the file formats which is commonly used in the neuroscience community are somehow based on the HDF5 file format,  I decided to create a general parser based on the HDF5 file format for converting commonly used file format into a more distributed friendly structure.
+- From the processing perspective, BNDF currently has only distributed spike sorter module. Various extensions should be considered here, like:
+  1. The Spike sorter module needs to be improved, and generalized in a way that it could handle more up-to-date and complex spike sorting algorithms.
+  2. Different distributed processing algorithms should be added to BNDF.
+- Currently, the usage of BNDF is restricted to a spark-submit job which is not trivial from the user's point of view. Several considerations may apply for ease of use in future works, for example:
+  1. Creation of a shell-based application for interacting easily with BNDF.
+  2. Creation of a web-based application to access BNDF core functionality even more easilly.
+
 
 ## Documentation
 
