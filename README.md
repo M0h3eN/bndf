@@ -73,7 +73,7 @@ It is very important input data placed in the same network as cluster or, a fast
 Otherwise, data locality could create major bottlenecks while processing data with Spark.
 
 ## Limitation, Current, and Future work
-Currently BNDF is at its early stage of developement and require various extension to be fully functional framework. 
+Currently, BNDF is at its early stage of development and require a various extension to be a fully functional framework. These are the most well-known cases: 
 
 - Currently, BNDF only supports MAT files. I am working on adding commonly used file format like, [Nwb](https://www.nwb.org), 
   [Nix](https://nixio.readthedocs.io/en/latest/getting_started.html), and [Nio](https://neo.readthedocs.io/en/stable/).
