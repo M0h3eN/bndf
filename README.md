@@ -28,7 +28,7 @@ Currently, BNDF supports MAT files as raw input data with conditions described i
 You will need to have [Apache Maven](https://maven.apache.org/) 3.6.0 or later installed in order to compile BNDF.
 
 ```bash
-$ git clone https://gitlab.com/neuroscience-lab/bndf
+$ git clone https://github.com/M0h3eN/bndf.git
 $ cd bndf
 $ mvn install 
 ```
@@ -60,7 +60,7 @@ $ spark-submit \
 ```
 
 Spark-submit's parameters detailed information are available in [submitting-applications](https://spark.apache.org/docs/latest/submitting-applications.html).
-For creating a private cluster and information about other runtime parameters not discussed here, see [BdnsCluster](https://gitlab.com/neuroscience-lab/bndfcluster).
+For creating a private cluster and information about other runtime parameters not discussed here, see [BndfCluster](https://github.com/M0h3eN/bndfcluster.git).
 
 ### Data Locality
 
@@ -73,7 +73,7 @@ It is very important input data placed in the same network as cluster or, a fast
 Otherwise, data locality could create major bottlenecks while processing data with Spark.
 
 ## Limitation, Current, and Future work
-Currently, BNDF is at its early stage of development and require a various extension to be a fully functional framework. These are the most well-known cases: 
+Currently, BNDF is at its early stage of development and require various extensions to be a fully functional framework. These are the most well-known cases: 
 
 - Currently, BNDF only supports MAT files. I am working on adding commonly used file format like, [Nwb](https://www.nwb.org), 
   [Nix](https://nixio.readthedocs.io/en/latest/getting_started.html), and [Nio](https://neo.readthedocs.io/en/stable/).
