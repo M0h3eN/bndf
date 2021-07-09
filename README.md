@@ -77,13 +77,13 @@ Currently, BNDF is at its early stage of development and require various extensi
 
 - Currently, BNDF only supports MAT files. I am working on adding commonly used file format like, [Nwb](https://www.nwb.org), 
   [Nix](https://nixio.readthedocs.io/en/latest/getting_started.html), and [Nio](https://neo.readthedocs.io/en/stable/).
-- The functionality of BNDF schema, or generally its parser is limited. Since most of the file formats which is commonly used in the neuroscience community are somehow based on the HDF5 file format,  I decided to create a general parser based on the HDF5 file format for converting commonly used file format into a more distributed friendly structure.
+- The functionality of BNDF schema, or generally its parser is limited. Since most of the file formats which is commonly used in the neuroscience community are somehow based on the [HDF5](https://www.hdfgroup.org/solutions/hdf5/) file format,  I decided to create a general parser based on the HDF5 file format for converting commonly used file format into a more distributed friendly structure.
 - From the processing perspective, BNDF currently has only distributed spike sorter module. Various extensions should be considered here, like:
   1. The Spike sorter module needs to be improved, and generalized in a way that it could handle more up-to-date and complex spike sorting algorithms.
   2. Different distributed processing algorithms should be added to BNDF.
 - Currently, the usage of BNDF is restricted to a spark-submit job which is not trivial from the user's point of view. Several considerations may apply for ease of use in future works, for example:
   1. Creation of a shell-based application for interacting easily with BNDF.
-  2. Creation of a web-based application to access BNDF core functionality even more easilly.
+  2. Creation of a web-based application to access BNDF core functionality even more easily.
 
 
 ## Documentation
